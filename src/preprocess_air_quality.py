@@ -201,6 +201,9 @@ def pretty_label(column: str) -> str:
 
 
 def unit_for(column: str, spec: FieldSpec) -> str:
+    profile = _profile()
+    if profile is not None and column in profile.units:
+        return profile.units[column]
     for canonical, col in spec.pollutant.items():
         if col == column:
             return POLLUTANT_INFO.get(canonical, {}).get("unit", "")
@@ -306,6 +309,20 @@ RECORD_START = "### Air quality record"
 QA_START = "### Question and answer"
 DOC_END = "### End"
 
+# The active dataset profile supplies domain wording, units and reference text.
+# A module-level handle keeps the many formatting helpers simple; it is set once
+# by prepare() at the start of a run.
+_ACTIVE_PROFILE = None
+
+
+def set_profile(profile) -> None:
+    global _ACTIVE_PROFILE
+    _ACTIVE_PROFILE = profile
+
+
+def _profile():
+    return _ACTIVE_PROFILE
+
 
 def _context(row: pd.Series, spec: FieldSpec) -> str:
     """Short locator phrase: location + timestamp, from fields that exist."""
@@ -325,7 +342,14 @@ def _context(row: pd.Series, spec: FieldSpec) -> str:
                 except Exception:
                     parts.append(f"on {format_value(value, col, spec)}")
                 break
-    if not parts and len(row) and isinstance(row.name, (int,)):
+    if not parts:
+        # fall back to an identifier column (e.g. student_id) or the row position
+        for col in spec.identifier:
+            if col in row.index and pd.notna(row[col]):
+                label = (_profile().identity_label if _profile() else "record")
+                parts.append(f"for {label} {format_value(row[col], col, spec)}")
+                break
+    if not parts:
         parts.append(f"record {row.name}")
     return " ".join(parts)
 
@@ -374,9 +398,10 @@ def _category_value(row: pd.Series, spec: FieldSpec) -> Optional[str]:
 
 
 def row_card(row: pd.Series, spec: FieldSpec) -> str:
-    """Serialise one measurement row as a readable air quality record."""
+    """Serialise one measurement row as a readable record card."""
     context = _context(row, spec)
-    lines = [f"{RECORD_START}{': ' + context if context else ''}."]
+    heading = _profile().record_heading if _profile() else RECORD_START
+    lines = [f"{heading}{': ' + context if context else ''}."]
 
     pollutants = _pollutant_pairs(row, spec)
     if pollutants:
@@ -388,17 +413,20 @@ def row_card(row: pd.Series, spec: FieldSpec) -> str:
         lines.append("Weather: " + "; ".join(f"{k} {v}" for k, v in weather) + ".")
     category = _category_value(row, spec)
     if category:
-        lines.append(f"Air quality category: {category}.")
+        category_label = _profile().category_label if _profile() else "Air quality category"
+        lines.append(f"{category_label}: {category}.")
 
     # any remaining informative numeric columns not already serialised
-    covered = set(spec.pollutant.values()) | set(spec.weather.values()) | set(spec.category)
+    covered = (set(spec.pollutant.values()) | set(spec.weather.values())
+               | set(spec.category) | set(spec.identifier))
     extras = [c for c in spec.numeric if c not in covered]
     extra_parts = [
         f"{pretty_label(c)} {format_value(row[c], c, spec)}"
         for c in extras if c in row.index and pd.notna(row[c])
     ]
     if extra_parts:
-        lines.append("Other measurements: " + "; ".join(extra_parts) + ".")
+        label = "Other measurements" if (pollutants or weather) else "Measurements"
+        lines.append(f"{label}: " + "; ".join(extra_parts) + ".")
     for col in spec.categorical:
         if col in spec.category or col in spec.location or col not in row.index:
             continue
@@ -425,11 +453,25 @@ def qa_pairs_for_row(row: pd.Series, spec: FieldSpec, max_pairs: int = 4) -> Lis
         )
     category = _category_value(row, spec)
     if category:
+        category_label = _profile().category_label if _profile() else "Air quality category"
         candidates.append(
-            (f"What is the air quality category{located}?", f"The air quality category is {category}.")
+            (f"What is the {category_label.lower()}{located}?",
+             f"The {category_label.lower()} is {category}.")
         )
     for label, value in _index_pairs(row, spec):
         candidates.append((f"What is the {label}{located}?", f"The {label} is {value}."))
+
+    # Field-by-field questions for the remaining numeric measurements. These make
+    # any tabular schema learnable (student scores and study hours as well as
+    # pollutant concentrations).
+    covered = (set(spec.pollutant.values()) | set(spec.weather.values())
+               | set(spec.category) | set(spec.identifier))
+    for column in spec.numeric:
+        if column in covered or column not in row.index or pd.isna(row[column]):
+            continue
+        label = pretty_label(column)
+        value = format_value(row[column], column, spec)
+        candidates.append((f"What is the {label.lower()}{located}?", f"The {label.lower()} is {value}."))
     weather = _weather_pairs(row, spec)
     if weather:
         desc = "; ".join(f"{k} {v}" for k, v in weather)
@@ -456,8 +498,14 @@ def qa_document(question: str, answer: str) -> str:
 
 
 def knowledge_documents(columns: Sequence[str], spec: FieldSpec) -> List[str]:
-    """Reference text about the pollutants that actually appear in the data."""
+    """Reference text for the domain of the active profile."""
+    profile = _profile()
+    if profile is not None and profile.key != "air_quality":
+        header = f"### {profile.subject.title()} knowledge"
+        return [f"{header}\n{text}\n{DOC_END}" for text in profile.knowledge]
     docs = [f"### Air quality knowledge\n{text}\n{DOC_END}" for text in GENERAL_KNOWLEDGE]
+    if profile is not None:
+        docs += [f"### Air quality knowledge\n{text}\n{DOC_END}" for text in profile.knowledge]
     for canonical, column in spec.pollutant.items():
         info = POLLUTANT_INFO.get(canonical)
         if not info:
@@ -490,9 +538,10 @@ def dataset_fact_documents(spec: FieldSpec, train_rows: int) -> List[str]:
             + ", ".join(pretty_label(c) for c in spec.weather.values()) + ".",
         ))
     if spec.category:
+        cat = _profile().category_label if _profile() else "air quality category"
         docs.append(qa_document(
-            "Which field gives the air quality category?",
-            f"The category is given by {', '.join(pretty_label(c) for c in spec.category)}.",
+            f"Which field gives the {cat.lower()}?",
+            f"The {cat.lower()} is given by {', '.join(pretty_label(c) for c in spec.category)}.",
         ))
     docs.append(qa_document(
         "What does the dataset describe?",
@@ -537,6 +586,7 @@ def prepare(
     splits: Dict[str, pd.DataFrame],
     output_dir: str,
     spec: Optional[FieldSpec] = None,
+    profile=None,
 ) -> Dict[str, Any]:
     """Clean every split, serialise to text and persist the processed corpus.
 
@@ -544,6 +594,8 @@ def prepare(
     """
     from dataset_loader import analyze_frame
 
+    if profile is not None:
+        set_profile(profile)
     spec = spec or classify_fields(splits[list(splits)[0]])
     report: Dict[str, Any] = {"output_dir": output_dir, "splits": {}, "field_spec": spec.to_dict()}
     cleaned: Dict[str, pd.DataFrame] = {}

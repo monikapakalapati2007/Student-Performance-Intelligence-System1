@@ -14,6 +14,8 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 import pandas as pd
 
+from profiles import DatasetProfile, all_profiles, get_profile
+
 TABLE_EXTENSIONS = (".parquet", ".csv", ".jsonl", ".ndjson", ".json", ".tsv", ".xlsx", ".feather")
 
 # Keywords that identify genuine air-quality measurement columns.
@@ -269,25 +271,55 @@ def _looks_like_dates(series: pd.Series, sample: int = 30) -> bool:
 
 
 def is_air_quality(df: pd.DataFrame) -> Tuple[bool, str]:
-    """Decide whether a table holds air quality measurements."""
-    spec = classify_fields(df)
-    signals: List[str] = []
-    if spec.pollutant:
-        signals.append(f"pollutant columns {sorted(set(spec.pollutant.values()))}")
-    if spec.weather:
-        signals.append(f"meteorological columns {sorted(set(spec.weather.values()))}")
-    if spec.category and spec.numeric:
-        signals.append(f"category columns {sorted(set(spec.category))}")
-    if spec.location and spec.numeric:
-        signals.append(f"location columns {sorted(set(spec.location))}")
-    if "aqi" in spec.pollutant:
-        signals.append("AQI column")
-    student = detect_student_performance(df)
-    if student:
-        return False, f"looks like student-performance data ({student})"
-    if len(signals) >= MIN_AQ_SIGNALS:
-        return True, "; ".join(signals)
-    return False, f"insufficient air quality signals (found {len(signals)}: {signals})"
+    """Backward-compatible wrapper: does this table hold air quality measurements?"""
+    return matches_profile(df, get_profile("air_quality"))
+
+
+def matches_profile(df: pd.DataFrame, profile: DatasetProfile) -> Tuple[bool, str]:
+    """Decide whether a table belongs to the given dataset profile."""
+    columns = [_normalize_name(c) for c in df.columns]
+    matched: List[str] = []
+    for label, keys in profile.markers.items():
+        for key in keys:
+            k = _normalize_name(key)
+            hit = None
+            for col in columns:
+                if col == k or (len(k) > 3 and k in col):
+                    hit = col
+                    break
+            if hit is not None:
+                matched.append(f"{label} (`{hit}`)")
+                break
+    if profile.key == "student_performance":
+        student = detect_student_performance(df)
+        if student and len(matched) >= profile.min_markers:
+            return True, f"student-performance table: {'; '.join(sorted(set(matched)))} ({student})"
+        return False, f"not a student-performance table (matched {len(matched)} markers)"
+    if profile.key == "air_quality" and len(matched) < profile.min_markers:
+        spec = classify_fields(df)
+        signals: List[str] = []
+        if spec.pollutant:
+            signals.append(f"pollutant columns {sorted(set(spec.pollutant.values()))}")
+        if spec.weather:
+            signals.append(f"meteorological columns {sorted(set(spec.weather.values()))}")
+        student = detect_student_performance(df)
+        if student:
+            return False, f"looks like student-performance data ({student})"
+        return False, f"insufficient air quality signals (found {len(signals)}: {signals})"
+    return (len(matched) >= profile.min_markers,
+            f"matched {len(matched)} {profile.key} markers: {'; '.join(sorted(set(matched)))}")
+
+
+def detect_profile(df: pd.DataFrame) -> Tuple[Optional[str], Dict[str, str]]:
+    """Identify which known profile a table belongs to (student data before AQ)."""
+    order = sorted(all_profiles(), key=lambda p: 0 if p.key == "student_performance" else 1)
+    reasons: Dict[str, str] = {}
+    for profile in order:
+        ok, reason = matches_profile(df, profile)
+        reasons[profile.key] = reason
+        if ok:
+            return profile.key, reasons
+    return None, reasons
 
 
 # --------------------------------------------------------------------------- #
@@ -408,17 +440,21 @@ def _guess_split_name(path: str) -> Optional[str]:
     return None
 
 
-def load_air_quality_splits(
+def load_splits(
     search_dirs: Sequence[str],
     explicit: Optional[Dict[str, str]] = None,
     seed: int = 1337,
+    profile_key: str = "auto",
 ) -> Tuple[Dict[str, pd.DataFrame], Dict[str, Any]]:
-    """Load train/validation/test air quality splits plus a full audit trail.
+    """Load train/validation/test splits for the requested dataset profile.
 
     Priority: explicit paths > files named train/valid/test > single table split
-    deterministically (80/10/10 by row hash, seed controlled).
+    deterministically (80/10/10 by row hash, seed controlled). When several
+    split families exist (two different schemas), the largest one is used.
     """
-    report: Dict[str, Any] = {"searched_dirs": list(search_dirs), "files_examined": [], "rejected": []}
+    report: Dict[str, Any] = {"searched_dirs": list(search_dirs), "files_examined": [],
+                             "rejected": [], "requested_profile": profile_key}
+    chosen_profile: Optional[str] = None if profile_key == "auto" else profile_key
     if explicit:
         splits = {k: read_any_table(v) for k, v in explicit.items()}
         report["source"] = "explicit paths"
@@ -434,10 +470,22 @@ def load_air_quality_splits(
         except Exception as exc:
             report["rejected"].append({"path": path, "reason": f"unreadable: {exc}"})
             continue
-        ok, reason = is_air_quality(df)
+        detected, reasons = detect_profile(df)
+        if profile_key == "auto":
+            ok = detected is not None
+            if ok and chosen_profile is None:
+                chosen_profile = detected
+            elif ok and chosen_profile is not None and detected != chosen_profile:
+                ok = False
+            reason = reasons.get(chosen_profile or detected or "", "no known profile matched")
+            if ok is False and detected and chosen_profile and detected != chosen_profile:
+                reason = f"belongs to profile '{detected}', already using '{chosen_profile}'"
+        else:
+            ok, reason = matches_profile(df, get_profile(profile_key))
         report["files_examined"].append(
             {"path": path, "rows": int(len(df)), "columns": [str(c) for c in df.columns],
-             "air_quality": ok, "reason": reason}
+             "air_quality": ok, "reason": reason,
+             "detected_profile": detected}
         )
         if not ok:
             report["rejected"].append({"path": path, "reason": reason})
@@ -450,6 +498,26 @@ def load_air_quality_splits(
 
     if not accepted and not unnamed:
         raise NoAirQualityDataError(build_missing_data_message(report))
+
+    report["profile"] = chosen_profile
+
+    # Two different tables can both look usable (e.g. two distinct schemas). Keep
+    # only the largest consistent family, so train/valid/test share one schema.
+    if accepted:
+        families: Dict[Tuple[str, ...], List[Tuple[str, str, pd.DataFrame]]] = {}
+        for split, items in accepted.items():
+            for path, df in items:
+                signature = tuple(sorted(str(c) for c in df.columns))
+                families.setdefault(signature, []).append((split, path, df))
+        if len(families) > 1:
+            best = max(families, key=lambda s: sum(len(d) for _, _, d in families[s]))
+            report["families_considered"] = [
+                {"columns": list(s), "rows": sum(len(d) for _, _, d in fam),
+                 "chosen": s == best} for s, fam in families.items()
+            ]
+            accepted = {}
+            for split, path, df in families[best]:
+                accepted.setdefault(split, []).append((path, df))
 
     splits: Dict[str, pd.DataFrame] = {}
     if accepted:
@@ -486,6 +554,12 @@ def load_air_quality_splits(
 
     report["split_rows"] = {k: int(len(v)) for k, v in splits.items()}
     return splits, report
+
+
+def load_air_quality_splits(search_dirs: Sequence[str], explicit: Optional[Dict[str, str]] = None,
+                            seed: int = 1337) -> Tuple[Dict[str, pd.DataFrame], Dict[str, Any]]:
+    """Backward-compatible wrapper around load_splits() for the air quality profile."""
+    return load_splits(search_dirs, explicit, seed, profile_key="air_quality")
 
 
 def build_missing_data_message(report: Dict[str, Any]) -> str:

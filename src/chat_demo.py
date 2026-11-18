@@ -27,8 +27,9 @@ if SRC_DIR not in sys.path:
 
 import torch  # noqa: E402
 
-from inference import STANDARD_QUESTIONS, generate_answer  # noqa: E402
+from inference import STANDARD_QUESTIONS, generate_answer, load_questions  # noqa: E402
 from model import load_model_for_inference  # noqa: E402
+from profiles import default_models_dir, read_model_profile  # noqa: E402
 
 STATE: Dict[str, Any] = {"model": None, "tokenizer": None, "config": None,
                          "meta": None, "device": None, "name": "air-quality-slm",
@@ -182,7 +183,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802
         path = self.path.split("?")[0]
         if path in ("/", "/index.html"):
-            html = INDEX_HTML.replace("__CHIPS__", json.dumps(STANDARD_QUESTIONS[:4]))
+            chips = STATE.get("questions") or STANDARD_QUESTIONS
+            html = INDEX_HTML.replace("__CHIPS__", json.dumps(chips[:4]))
             body = html.encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -269,10 +271,10 @@ def _chunks(text: str, size: int = 4) -> List[str]:
 
 def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Serve the Air Quality SLM chat demo.")
-    parser.add_argument("--models-dir", default=os.path.join(PROJECT_ROOT, "models", "air_quality_slm"))
+    parser.add_argument("--models-dir", default=default_models_dir(PROJECT_ROOT))
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8080)
-    parser.add_argument("--name", default="air-quality-slm")
+    parser.add_argument("--name", default=None, help="Model name reported by the API.")
     return parser.parse_args(argv)
 
 
@@ -286,8 +288,12 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 2
     device = torch.device(meta["device"])
     model.to(device)
+    if not args.name:
+        profile_key = read_model_profile(args.models_dir).get("key", "air_quality")
+        args.name = profile_key.replace("_", "-") + "-slm"
     STATE.update(model=model, tokenizer=tokenizer, config=config, meta=meta,
-                 device=device, name=args.name)
+                 device=device, name=args.name,
+                 questions=load_questions(args.models_dir))
 
     server = ThreadingHTTPServer((args.host, args.port), Handler)
     url = f"http://{args.host}:{args.port}"

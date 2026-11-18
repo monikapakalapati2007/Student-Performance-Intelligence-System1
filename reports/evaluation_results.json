@@ -1,0 +1,210 @@
+{
+  "test_metrics": {
+    "loss": 0.178646,
+    "perplexity": 1.1956,
+    "token_accuracy": 0.944376,
+    "scored_tokens": 1517269
+  },
+  "qa_generation": {
+    "held_out_questions": 12,
+    "mean_token_f1": 0.8667,
+    "exact_match_rate": 0.1667,
+    "mean_numeric_recall": 0.0,
+    "numeric_questions": 6,
+    "free_form_questions": 5,
+    "generated_numerals_unsupported": 6
+  },
+  "model": {
+    "n_layer": 4,
+    "n_head": 4,
+    "n_embd": 192,
+    "block_size": 128,
+    "vocab_size": 4096,
+    "weights": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\models\\student_performance_slm\\best_model.pt",
+    "n_params": 2557632
+  },
+  "samples": [
+    {
+      "question": "What is the grade for student 472468?",
+      "reference": "The grade is A.",
+      "prediction": "The grade is A.",
+      "has_reference": true,
+      "token_f1": 1.0,
+      "exact_match": 1,
+      "numeric_recall": null,
+      "numerals_in_prediction_not_in_reference": []
+    },
+    {
+      "question": "What is the weekly self study hours for student 472468?",
+      "reference": "The weekly self study hours is 21.5 hours per week.",
+      "prediction": "The weekly self study hours is 13.1 hours per week.",
+      "has_reference": true,
+      "token_f1": 0.9,
+      "exact_match": 0,
+      "numeric_recall": 0.0,
+      "numerals_in_prediction_not_in_reference": [
+        "13.1"
+      ]
+    },
+    {
+      "question": "What is the grade for student 410603?",
+      "reference": "The grade is A.",
+      "prediction": "The grade is A.",
+      "has_reference": true,
+      "token_f1": 1.0,
+      "exact_match": 1,
+      "numeric_recall": null,
+      "numerals_in_prediction_not_in_reference": []
+    },
+    {
+      "question": "What is the weekly self study hours for student 410603?",
+      "reference": "The weekly self study hours is 13.1 hours per week.",
+      "prediction": "The weekly self study hours is 17.1 hours per week.",
+      "has_reference": true,
+      "token_f1": 0.9,
+      "exact_match": 0,
+      "numeric_recall": 0.0,
+      "numerals_in_prediction_not_in_reference": [
+        "17.1"
+      ]
+    },
+    {
+      "question": "What is the grade for student 641524?",
+      "reference": "The grade is A.",
+      "prediction": "The grade is B.",
+      "has_reference": true,
+      "token_f1": 0.75,
+      "exact_match": 0,
+      "numeric_recall": null,
+      "numerals_in_prediction_not_in_reference": []
+    },
+    {
+      "question": "What is the weekly self study hours for student 641524?",
+      "reference": "The weekly self study hours is 26 hours per week.",
+      "prediction": "The weekly self study hours is 18.1 hours per week.",
+      "has_reference": true,
+      "token_f1": 0.9,
+      "exact_match": 0,
+      "numeric_recall": 0.0,
+      "numerals_in_prediction_not_in_reference": [
+        "18.1"
+      ]
+    },
+    {
+      "question": "What is the grade for student 669998?",
+      "reference": "The grade is B.",
+      "prediction": "The grade is A.",
+      "has_reference": true,
+      "token_f1": 0.75,
+      "exact_match": 0,
+      "numeric_recall": null,
+      "numerals_in_prediction_not_in_reference": []
+    },
+    {
+      "question": "What is the weekly self study hours for student 669998?",
+      "reference": "The weekly self study hours is 18.7 hours per week.",
+      "prediction": "The weekly self study hours is 17.3 hours per week.",
+      "has_reference": true,
+      "token_f1": 0.9,
+      "exact_match": 0,
+      "numeric_recall": 0.0,
+      "numerals_in_prediction_not_in_reference": [
+        "17.3"
+      ]
+    },
+    {
+      "question": "What is the grade for student 854661?",
+      "reference": "The grade is B.",
+      "prediction": "The grade is A.",
+      "has_reference": true,
+      "token_f1": 0.75,
+      "exact_match": 0,
+      "numeric_recall": null,
+      "numerals_in_prediction_not_in_reference": []
+    },
+    {
+      "question": "What is the weekly self study hours for student 854661?",
+      "reference": "The weekly self study hours is 18.4 hours per week.",
+      "prediction": "The weekly self study hours is 17.7 hours per week.",
+      "has_reference": true,
+      "token_f1": 0.9,
+      "exact_match": 0,
+      "numeric_recall": 0.0,
+      "numerals_in_prediction_not_in_reference": [
+        "17.7"
+      ]
+    },
+    {
+      "question": "What is the grade for student 852906?",
+      "reference": "The grade is D.",
+      "prediction": "The grade is A.",
+      "has_reference": true,
+      "token_f1": 0.75,
+      "exact_match": 0,
+      "numeric_recall": null,
+      "numerals_in_prediction_not_in_reference": []
+    },
+    {
+      "question": "What is the weekly self study hours for student 852906?",
+      "reference": "The weekly self study hours is 7 hours per week.",
+      "prediction": "The weekly self study hours is 13.3 hours per week.",
+      "has_reference": true,
+      "token_f1": 0.9,
+      "exact_match": 0,
+      "numeric_recall": 0.0,
+      "numerals_in_prediction_not_in_reference": [
+        "13.3"
+      ]
+    },
+    {
+      "question": "What does the grade represent?",
+      "reference": "",
+      "prediction": "The weekly self study hours is 17.7 hours per week.",
+      "has_reference": false,
+      "token_f1": null,
+      "exact_match": null,
+      "numeric_recall": null,
+      "numerals_in_prediction_not_in_reference": []
+    },
+    {
+      "question": "Which study behaviour fields are recorded?",
+      "reference": "",
+      "prediction": "The weekly self study hours is 17.2 hours per week.",
+      "has_reference": false,
+      "token_f1": null,
+      "exact_match": null,
+      "numeric_recall": null,
+      "numerals_in_prediction_not_in_reference": []
+    },
+    {
+      "question": "Explain the relationship between attendance and total score.",
+      "reference": "",
+      "prediction": "The weekly self study hours is 17.1 hours per week.",
+      "has_reference": false,
+      "token_f1": null,
+      "exact_match": null,
+      "numeric_recall": null,
+      "numerals_in_prediction_not_in_reference": []
+    },
+    {
+      "question": "Summarise a student record.",
+      "reference": "",
+      "prediction": "The class participation is 7.6 points out of 10.",
+      "has_reference": false,
+      "token_f1": null,
+      "exact_match": null,
+      "numeric_recall": null,
+      "numerals_in_prediction_not_in_reference": []
+    },
+    {
+      "question": "What is the range of weekly self study hours?",
+      "reference": "",
+      "prediction": "The weekly self study hours is 19.9 hours per week.",
+      "has_reference": false,
+      "token_f1": null,
+      "exact_match": null,
+      "numeric_recall": null,
+      "numerals_in_prediction_not_in_reference": []
+    }
+  ]
+}

@@ -1,0 +1,1505 @@
+{
+  "profile": {
+    "key": "student_performance",
+    "display_name": "Student Performance SLM",
+    "subject": "student performance",
+    "paper_title": "A Compact Decoder-Only Small Language Model for Student Performance Record Understanding: Design, Training and Evaluation",
+    "description": "student performance (study hours, attendance, participation, score, grade)",
+    "model_dirname": "student_performance_slm"
+  },
+  "hardware": {
+    "os": "Windows 11 (AMD64)",
+    "python_version": "3.13.14",
+    "python_executable": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\.venv\\Scripts\\python.exe",
+    "torch_version": "2.15.0+cpu",
+    "cpu_name": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel",
+    "cpu_count": 12,
+    "total_ram_gb": 15.68,
+    "cuda_available": false,
+    "cuda_version": null,
+    "cuda_device_count": 0,
+    "gpu_names": [],
+    "gpu_total_vram_gb": null,
+    "gpu_free_vram_gb": null,
+    "mps_available": false,
+    "selected_device": "cpu",
+    "precision": "float32",
+    "threads": 8
+  },
+  "statistics": {
+    "ff_hidden": 512,
+    "correlation": {
+      "student_id": {
+        "student_id": 1.0,
+        "weekly_self_study_hours": 0.009,
+        "attendance_percentage": -0.0,
+        "class_participation": -0.006,
+        "total_score": 0.011
+      },
+      "weekly_self_study_hours": {
+        "student_id": 0.009,
+        "weekly_self_study_hours": 1.0,
+        "attendance_percentage": 0.006,
+        "class_participation": 0.004,
+        "total_score": 0.811
+      },
+      "attendance_percentage": {
+        "student_id": -0.0,
+        "weekly_self_study_hours": 0.006,
+        "attendance_percentage": 1.0,
+        "class_participation": 0.009,
+        "total_score": 0.005
+      },
+      "class_participation": {
+        "student_id": -0.006,
+        "weekly_self_study_hours": 0.004,
+        "attendance_percentage": 0.009,
+        "class_participation": 1.0,
+        "total_score": -0.002
+      },
+      "total_score": {
+        "student_id": 0.011,
+        "weekly_self_study_hours": 0.811,
+        "attendance_percentage": 0.005,
+        "class_participation": -0.002,
+        "total_score": 1.0
+      }
+    },
+    "parameters": 2557632,
+    "weight_mb_fp32": 9.76
+  },
+  "discovery": {
+    "searched_dirs": [
+      "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\data\\processed",
+      "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\data\\training",
+      "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\data\\validation",
+      "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\data\\testing",
+      "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\data\\test",
+      "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\data",
+      "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\hugging face",
+      "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking"
+    ],
+    "files_examined": [
+      {
+        "path": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\data\\processed\\student_performance\\test.jsonl",
+        "rows": 10000,
+        "columns": [
+          "id",
+          "text",
+          "split"
+        ],
+        "air_quality": false,
+        "reason": "no known profile matched",
+        "detected_profile": null
+      },
+      {
+        "path": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\data\\processed\\student_performance\\test_qa.jsonl",
+        "rows": 4000,
+        "columns": [
+          "question",
+          "answer"
+        ],
+        "air_quality": false,
+        "reason": "no known profile matched",
+        "detected_profile": null
+      },
+      {
+        "path": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\data\\processed\\student_performance\\train.jsonl",
+        "rows": 100008,
+        "columns": [
+          "id",
+          "text",
+          "split"
+        ],
+        "air_quality": false,
+        "reason": "no known profile matched",
+        "detected_profile": null
+      },
+      {
+        "path": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\data\\processed\\student_performance\\train_qa.jsonl",
+        "rows": 4000,
+        "columns": [
+          "question",
+          "answer"
+        ],
+        "air_quality": false,
+        "reason": "no known profile matched",
+        "detected_profile": null
+      },
+      {
+        "path": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\data\\processed\\student_performance\\validation.jsonl",
+        "rows": 10000,
+        "columns": [
+          "id",
+          "text",
+          "split"
+        ],
+        "air_quality": false,
+        "reason": "no known profile matched",
+        "detected_profile": null
+      },
+      {
+        "path": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\data\\processed\\student_performance\\validation_qa.jsonl",
+        "rows": 4000,
+        "columns": [
+          "question",
+          "answer"
+        ],
+        "air_quality": false,
+        "reason": "no known profile matched",
+        "detected_profile": null
+      },
+      {
+        "path": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\hugging face\\exams_test.parquet",
+        "rows": 150,
+        "columns": [
+          "gender",
+          "race/ethnicity",
+          "parental level of education",
+          "lunch",
+          "test preparation course",
+          "math score",
+          "reading score",
+          "writing score"
+        ],
+        "air_quality": true,
+        "reason": "student-performance table: demographics (`gender`); score (`math_score`) (gender (`gender`); lunch (`lunch`); parental education (`parental level of education`); scores (`math score`); scores (`reading score`); scores (`writing score`); test preparation (`test preparation course`))",
+        "detected_profile": "student_performance"
+      },
+      {
+        "path": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\hugging face\\exams_train.parquet",
+        "rows": 700,
+        "columns": [
+          "gender",
+          "race/ethnicity",
+          "parental level of education",
+          "lunch",
+          "test preparation course",
+          "math score",
+          "reading score",
+          "writing score"
+        ],
+        "air_quality": true,
+        "reason": "student-performance table: demographics (`gender`); score (`math_score`) (gender (`gender`); lunch (`lunch`); parental education (`parental level of education`); scores (`math score`); scores (`reading score`); scores (`writing score`); test preparation (`test preparation course`))",
+        "detected_profile": "student_performance"
+      },
+      {
+        "path": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\hugging face\\exams_validation.parquet",
+        "rows": 150,
+        "columns": [
+          "gender",
+          "race/ethnicity",
+          "parental level of education",
+          "lunch",
+          "test preparation course",
+          "math score",
+          "reading score",
+          "writing score"
+        ],
+        "air_quality": true,
+        "reason": "student-performance table: demographics (`gender`); score (`math_score`) (gender (`gender`); lunch (`lunch`); parental education (`parental level of education`); scores (`math score`); scores (`reading score`); scores (`writing score`); test preparation (`test preparation course`))",
+        "detected_profile": "student_performance"
+      },
+      {
+        "path": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\hugging face\\million_test.parquet",
+        "rows": 150000,
+        "columns": [
+          "student_id",
+          "weekly_self_study_hours",
+          "attendance_percentage",
+          "class_participation",
+          "total_score",
+          "grade"
+        ],
+        "air_quality": true,
+        "reason": "student-performance table: attendance (`attendance_percentage`); grade (`grade`); participation (`class_participation`); score (`total_score`); study behaviour (`weekly_self_study_hours`) (grades (`grade`); grades (`total_score`); study habits (`attendance_percentage`); study habits (`class_participation`); study habits (`weekly_self_study_hours`))",
+        "detected_profile": "student_performance"
+      },
+      {
+        "path": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\hugging face\\million_train_.parquet",
+        "rows": 700000,
+        "columns": [
+          "student_id",
+          "weekly_self_study_hours",
+          "attendance_percentage",
+          "class_participation",
+          "total_score",
+          "grade"
+        ],
+        "air_quality": true,
+        "reason": "student-performance table: attendance (`attendance_percentage`); grade (`grade`); participation (`class_participation`); score (`total_score`); study behaviour (`weekly_self_study_hours`) (grades (`grade`); grades (`total_score`); study habits (`attendance_percentage`); study habits (`class_participation`); study habits (`weekly_self_study_hours`))",
+        "detected_profile": "student_performance"
+      },
+      {
+        "path": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\hugging face\\million_validation.parquet",
+        "rows": 150000,
+        "columns": [
+          "student_id",
+          "weekly_self_study_hours",
+          "attendance_percentage",
+          "class_participation",
+          "total_score",
+          "grade"
+        ],
+        "air_quality": true,
+        "reason": "student-performance table: attendance (`attendance_percentage`); grade (`grade`); participation (`class_participation`); score (`total_score`); study behaviour (`weekly_self_study_hours`) (grades (`grade`); grades (`total_score`); study habits (`attendance_percentage`); study habits (`class_participation`); study habits (`weekly_self_study_hours`))",
+        "detected_profile": "student_performance"
+      }
+    ],
+    "rejected": [
+      {
+        "path": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\data\\processed\\student_performance\\test.jsonl",
+        "reason": "no known profile matched"
+      },
+      {
+        "path": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\data\\processed\\student_performance\\test_qa.jsonl",
+        "reason": "no known profile matched"
+      },
+      {
+        "path": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\data\\processed\\student_performance\\train.jsonl",
+        "reason": "no known profile matched"
+      },
+      {
+        "path": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\data\\processed\\student_performance\\train_qa.jsonl",
+        "reason": "no known profile matched"
+      },
+      {
+        "path": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\data\\processed\\student_performance\\validation.jsonl",
+        "reason": "no known profile matched"
+      },
+      {
+        "path": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\data\\processed\\student_performance\\validation_qa.jsonl",
+        "reason": "no known profile matched"
+      }
+    ],
+    "requested_profile": "auto",
+    "profile": "student_performance",
+    "families_considered": [
+      {
+        "columns": [
+          "gender",
+          "lunch",
+          "math score",
+          "parental level of education",
+          "race/ethnicity",
+          "reading score",
+          "test preparation course",
+          "writing score"
+        ],
+        "rows": 1000,
+        "chosen": false
+      },
+      {
+        "columns": [
+          "attendance_percentage",
+          "class_participation",
+          "grade",
+          "student_id",
+          "total_score",
+          "weekly_self_study_hours"
+        ],
+        "rows": 1000000,
+        "chosen": true
+      }
+    ],
+    "source": "pre-existing split files",
+    "split_rows": {
+      "test": 150000,
+      "train": 700000,
+      "validation": 150000
+    },
+    "subsampling": {
+      "seed": 1337,
+      "original_rows": {
+        "test": 150000,
+        "train": 700000,
+        "validation": 150000
+      },
+      "rows_used": {
+        "test": 2000,
+        "train": 20000,
+        "validation": 2000
+      },
+      "note": "Rows were subsampled with a fixed seed for CPU training. Splits were not re-partitioned, so validation and test remain disjoint from each other."
+    }
+  },
+  "analyses": {
+    "test": {
+      "name": "test",
+      "rows": 2000,
+      "columns_count": 6,
+      "columns": [
+        {
+          "name": "student_id",
+          "dtype": "int64",
+          "missing": 0,
+          "missing_pct": 0.0,
+          "unique": 2000,
+          "role": "numeric",
+          "min": 202.0,
+          "max": 999856.0,
+          "mean": 514370.545,
+          "std": 289229.324,
+          "p05": 48704.2,
+          "p50": 531563.5,
+          "p95": 947547.35,
+          "zeros": 0,
+          "negative": 0,
+          "extreme_outliers_3iqr": 0
+        },
+        {
+          "name": "weekly_self_study_hours",
+          "dtype": "float64",
+          "missing": 0,
+          "missing_pct": 0.0,
+          "unique": 312,
+          "role": "numeric",
+          "min": 0.0,
+          "max": 38.0,
+          "mean": 15.1517,
+          "std": 6.7139,
+          "p05": 3.8,
+          "p50": 15.3,
+          "p95": 26.105,
+          "zeros": 31,
+          "negative": 0,
+          "extreme_outliers_3iqr": 0
+        },
+        {
+          "name": "attendance_percentage",
+          "dtype": "float64",
+          "missing": 0,
+          "missing_pct": 0.0,
+          "unique": 369,
+          "role": "numeric",
+          "min": 52.3,
+          "max": 100.0,
+          "mean": 84.6886,
+          "std": 9.3667,
+          "p05": 68.6,
+          "p50": 84.75,
+          "p95": 100.0,
+          "zeros": 0,
+          "negative": 0,
+          "extreme_outliers_3iqr": 0
+        },
+        {
+          "name": "class_participation",
+          "dtype": "float64",
+          "missing": 0,
+          "missing_pct": 0.0,
+          "unique": 96,
+          "role": "numeric",
+          "min": 0.0,
+          "max": 10.0,
+          "mean": 5.9204,
+          "std": 1.9982,
+          "p05": 2.6,
+          "p50": 5.9,
+          "p95": 9.5,
+          "zeros": 5,
+          "negative": 0,
+          "extreme_outliers_3iqr": 0
+        },
+        {
+          "name": "total_score",
+          "dtype": "float64",
+          "missing": 0,
+          "missing_pct": 0.0,
+          "unique": 488,
+          "role": "numeric",
+          "min": 16.9,
+          "max": 100.0,
+          "mean": 84.7716,
+          "std": 15.195,
+          "p05": 55.1,
+          "p50": 87.9,
+          "p95": 100.0,
+          "zeros": 0,
+          "negative": 0,
+          "extreme_outliers_3iqr": 0
+        },
+        {
+          "name": "grade",
+          "dtype": "str",
+          "missing": 0,
+          "missing_pct": 0.0,
+          "unique": 5,
+          "role": "categorical/text/datetime",
+          "top_values": {
+            "A": 1128,
+            "B": 507,
+            "C": 268,
+            "D": 83,
+            "F": 14
+          }
+        }
+      ],
+      "duplicate_rows": 0,
+      "duplicate_pct": 0.0,
+      "total_missing": 0,
+      "memory_mb": 0.09
+    },
+    "train": {
+      "name": "train",
+      "rows": 20000,
+      "columns_count": 6,
+      "columns": [
+        {
+          "name": "student_id",
+          "dtype": "int64",
+          "missing": 0,
+          "missing_pct": 0.0,
+          "unique": 20000,
+          "role": "numeric",
+          "min": 41.0,
+          "max": 999899.0,
+          "mean": 496455.2612,
+          "std": 289446.4298,
+          "p05": 49990.65,
+          "p50": 496051.0,
+          "p95": 948884.65,
+          "zeros": 0,
+          "negative": 0,
+          "extreme_outliers_3iqr": 0
+        },
+        {
+          "name": "weekly_self_study_hours",
+          "dtype": "float64",
+          "missing": 0,
+          "missing_pct": 0.0,
+          "unique": 373,
+          "role": "numeric",
+          "min": 0.0,
+          "max": 40.0,
+          "mean": 15.0717,
+          "std": 6.8556,
+          "p05": 3.5,
+          "p50": 15.1,
+          "p95": 26.4,
+          "zeros": 312,
+          "negative": 0,
+          "extreme_outliers_3iqr": 0
+        },
+        {
+          "name": "attendance_percentage",
+          "dtype": "float64",
+          "missing": 0,
+          "missing_pct": 0.0,
+          "unique": 466,
+          "role": "numeric",
+          "min": 50.0,
+          "max": 100.0,
+          "mean": 84.6361,
+          "std": 9.4557,
+          "p05": 68.4,
+          "p50": 85.0,
+          "p95": 100.0,
+          "zeros": 0,
+          "negative": 0,
+          "extreme_outliers_3iqr": 0
+        },
+        {
+          "name": "class_participation",
+          "dtype": "float64",
+          "missing": 0,
+          "missing_pct": 0.0,
+          "unique": 101,
+          "role": "numeric",
+          "min": 0.0,
+          "max": 10.0,
+          "mean": 5.9945,
+          "std": 1.9508,
+          "p05": 2.7,
+          "p50": 6.0,
+          "p95": 9.3,
+          "zeros": 37,
+          "negative": 0,
+          "extreme_outliers_3iqr": 0
+        },
+        {
+          "name": "total_score",
+          "dtype": "float64",
+          "missing": 0,
+          "missing_pct": 0.0,
+          "unique": 667,
+          "role": "numeric",
+          "min": 18.1,
+          "max": 100.0,
+          "mean": 84.4552,
+          "std": 15.2673,
+          "p05": 55.3,
+          "p50": 87.6,
+          "p95": 100.0,
+          "zeros": 0,
+          "negative": 0,
+          "extreme_outliers_3iqr": 0
+        },
+        {
+          "name": "grade",
+          "dtype": "str",
+          "missing": 0,
+          "missing_pct": 0.0,
+          "unique": 5,
+          "role": "categorical/text/datetime",
+          "top_values": {
+            "A": 11059,
+            "B": 5154,
+            "C": 2831,
+            "D": 848,
+            "F": 108
+          }
+        }
+      ],
+      "duplicate_rows": 0,
+      "duplicate_pct": 0.0,
+      "total_missing": 0,
+      "memory_mb": 0.94
+    },
+    "validation": {
+      "name": "validation",
+      "rows": 2000,
+      "columns_count": 6,
+      "columns": [
+        {
+          "name": "student_id",
+          "dtype": "int64",
+          "missing": 0,
+          "missing_pct": 0.0,
+          "unique": 2000,
+          "role": "numeric",
+          "min": 897.0,
+          "max": 999663.0,
+          "mean": 498226.752,
+          "std": 289637.7916,
+          "p05": 51556.2,
+          "p50": 493938.0,
+          "p95": 951477.0,
+          "zeros": 0,
+          "negative": 0,
+          "extreme_outliers_3iqr": 0
+        },
+        {
+          "name": "weekly_self_study_hours",
+          "dtype": "float64",
+          "missing": 0,
+          "missing_pct": 0.0,
+          "unique": 314,
+          "role": "numeric",
+          "min": 0.0,
+          "max": 37.8,
+          "mean": 15.0604,
+          "std": 6.8767,
+          "p05": 3.5,
+          "p50": 15.05,
+          "p95": 26.6,
+          "zeros": 31,
+          "negative": 0,
+          "extreme_outliers_3iqr": 0
+        },
+        {
+          "name": "attendance_percentage",
+          "dtype": "float64",
+          "missing": 0,
+          "missing_pct": 0.0,
+          "unique": 376,
+          "role": "numeric",
+          "min": 50.7,
+          "max": 100.0,
+          "mean": 84.6652,
+          "std": 9.3972,
+          "p05": 68.9,
+          "p50": 84.9,
+          "p95": 100.0,
+          "zeros": 0,
+          "negative": 0,
+          "extreme_outliers_3iqr": 0
+        },
+        {
+          "name": "class_participation",
+          "dtype": "float64",
+          "missing": 0,
+          "missing_pct": 0.0,
+          "unique": 98,
+          "role": "numeric",
+          "min": 0.0,
+          "max": 10.0,
+          "mean": 5.9977,
+          "std": 1.9504,
+          "p05": 2.795,
+          "p50": 6.0,
+          "p95": 9.4,
+          "zeros": 5,
+          "negative": 0,
+          "extreme_outliers_3iqr": 0
+        },
+        {
+          "name": "total_score",
+          "dtype": "float64",
+          "missing": 0,
+          "missing_pct": 0.0,
+          "unique": 502,
+          "role": "numeric",
+          "min": 24.5,
+          "max": 100.0,
+          "mean": 84.1694,
+          "std": 15.3604,
+          "p05": 54.085,
+          "p50": 87.1,
+          "p95": 100.0,
+          "zeros": 0,
+          "negative": 0,
+          "extreme_outliers_3iqr": 0
+        },
+        {
+          "name": "grade",
+          "dtype": "str",
+          "missing": 0,
+          "missing_pct": 0.0,
+          "unique": 5,
+          "role": "categorical/text/datetime",
+          "top_values": {
+            "A": 1083,
+            "B": 533,
+            "C": 278,
+            "D": 96,
+            "F": 10
+          }
+        }
+      ],
+      "duplicate_rows": 0,
+      "duplicate_pct": 0.0,
+      "total_missing": 0,
+      "memory_mb": 0.09
+    }
+  },
+  "overlap": {
+    "pairwise": {
+      "test__train": {
+        "shared_rows": 0,
+        "pct_of_smaller": 0.0
+      },
+      "test__validation": {
+        "shared_rows": 0,
+        "pct_of_smaller": 0.0
+      },
+      "train__validation": {
+        "shared_rows": 0,
+        "pct_of_smaller": 0.0
+      }
+    },
+    "leakage_detected": false
+  },
+  "preprocessing": {
+    "output_dir": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\data\\processed\\student_performance",
+    "splits": {
+      "test": {
+        "source_rows": 2000,
+        "rows_after_cleaning": 2000,
+        "documents": 10000,
+        "characters": 1542450,
+        "path": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\data\\processed\\student_performance\\test.jsonl",
+        "cleaning": {
+          "steps": [
+            "stripped whitespace and empty strings in text columns (0 values normalised)",
+            "dropped 0 exact duplicate rows within this split (duplicates are never removed across splits, and splits are never re-shuffled)"
+          ],
+          "duplicate_rows_removed": 0,
+          "rows_after": 2000,
+          "rows_before": 2000
+        },
+        "duplicate_rows_after_cleaning": 0
+      },
+      "train": {
+        "source_rows": 20000,
+        "rows_after_cleaning": 20000,
+        "documents": 100008,
+        "characters": 15424613,
+        "path": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\data\\processed\\student_performance\\train.jsonl",
+        "cleaning": {
+          "steps": [
+            "stripped whitespace and empty strings in text columns (0 values normalised)",
+            "dropped 0 exact duplicate rows within this split (duplicates are never removed across splits, and splits are never re-shuffled)"
+          ],
+          "duplicate_rows_removed": 0,
+          "rows_after": 20000,
+          "rows_before": 20000
+        },
+        "duplicate_rows_after_cleaning": 0
+      },
+      "validation": {
+        "source_rows": 2000,
+        "rows_after_cleaning": 2000,
+        "documents": 10000,
+        "characters": 1542486,
+        "path": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\data\\processed\\student_performance\\validation.jsonl",
+        "cleaning": {
+          "steps": [
+            "stripped whitespace and empty strings in text columns (0 values normalised)",
+            "dropped 0 exact duplicate rows within this split (duplicates are never removed across splits, and splits are never re-shuffled)"
+          ],
+          "duplicate_rows_removed": 0,
+          "rows_after": 2000,
+          "rows_before": 2000
+        },
+        "duplicate_rows_after_cleaning": 0
+      }
+    },
+    "field_spec": {
+      "all_columns": [
+        "student_id",
+        "weekly_self_study_hours",
+        "attendance_percentage",
+        "class_participation",
+        "total_score",
+        "grade"
+      ],
+      "numeric": [
+        "student_id",
+        "weekly_self_study_hours",
+        "attendance_percentage",
+        "class_participation",
+        "total_score"
+      ],
+      "categorical": [
+        "grade"
+      ],
+      "datetime": [],
+      "text": [],
+      "identifier": [
+        "student_id"
+      ],
+      "pollutant": {},
+      "weather": {},
+      "category": [
+        "grade"
+      ],
+      "location": [],
+      "time": [],
+      "constant": []
+    },
+    "examples": {
+      "record_card": "### Student record: for student 24261. Grade: B. Measurements: Weekly self study hours 8.6 hours per week; Attendance percentage 72.9 %; Class participation 4.9 points out of 10; Total score 79.8 points out of 100. ### End",
+      "qa_pairs": [
+        {
+          "question": "What is the grade for student 24261?",
+          "answer": "The grade is B."
+        },
+        {
+          "question": "What is the weekly self study hours for student 24261?",
+          "answer": "The weekly self study hours is 8.6 hours per week."
+        },
+        {
+          "question": "What is the attendance percentage for student 24261?",
+          "answer": "The attendance percentage is 72.9 %."
+        },
+        {
+          "question": "What is the class participation for student 24261?",
+          "answer": "The class participation is 4.9 points out of 10."
+        }
+      ]
+    },
+    "total_documents": 120008,
+    "total_characters": 18509549
+  },
+  "field_spec": {
+    "all_columns": [
+      "student_id",
+      "weekly_self_study_hours",
+      "attendance_percentage",
+      "class_participation",
+      "total_score",
+      "grade"
+    ],
+    "numeric": [
+      "student_id",
+      "weekly_self_study_hours",
+      "attendance_percentage",
+      "class_participation",
+      "total_score"
+    ],
+    "categorical": [
+      "grade"
+    ],
+    "datetime": [],
+    "text": [],
+    "identifier": [
+      "student_id"
+    ],
+    "pollutant": {},
+    "weather": {},
+    "category": [
+      "grade"
+    ],
+    "location": [],
+    "time": [],
+    "constant": []
+  },
+  "train_config": {
+    "preset": "cpu_tiny",
+    "device": "cpu",
+    "precision": "float32",
+    "seed": 1337,
+    "batch_size": 16,
+    "grad_accum": 1,
+    "block_size": 128,
+    "max_steps": 900,
+    "max_epochs": 4,
+    "learning_rate": 0.0015,
+    "min_lr": 0.00015000000000000001,
+    "warmup_steps": 45,
+    "weight_decay": 0.01,
+    "grad_clip": 1.0,
+    "optimizer": "AdamW",
+    "schedule": "linear warmup + cosine decay",
+    "eval_interval": 50,
+    "patience": 2,
+    "tie_weights": true,
+    "n_params": 2557632,
+    "estimated_train_memory_mb": 63.03,
+    "vocab_size": 4096,
+    "num_train_blocks": 119463,
+    "num_val_blocks": 11945,
+    "num_test_blocks": 11947
+  },
+  "config": {
+    "vocab_size": 4096,
+    "block_size": 128,
+    "n_layer": 4,
+    "n_head": 4,
+    "n_embd": 192,
+    "dropout": 0.1,
+    "tie_weights": true,
+    "arch": "decoder_only_rmsnorm_rope_swiglu"
+  },
+  "n_params": 2557632,
+  "history": [
+    {
+      "kind": "eval",
+      "step": 50,
+      "epoch": 1,
+      "val": {
+        "loss": 2.309516,
+        "perplexity": 10.0696,
+        "token_accuracy": 0.342978,
+        "tokens": 1517015
+      }
+    },
+    {
+      "kind": "eval",
+      "step": 100,
+      "epoch": 1,
+      "val": {
+        "loss": 0.560437,
+        "perplexity": 1.7514,
+        "token_accuracy": 0.860331,
+        "tokens": 1517015
+      }
+    },
+    {
+      "kind": "eval",
+      "step": 150,
+      "epoch": 1,
+      "val": {
+        "loss": 0.2856,
+        "perplexity": 1.3306,
+        "token_accuracy": 0.921642,
+        "tokens": 1517015
+      }
+    },
+    {
+      "kind": "eval",
+      "step": 200,
+      "epoch": 1,
+      "val": {
+        "loss": 0.238744,
+        "perplexity": 1.2697,
+        "token_accuracy": 0.931082,
+        "tokens": 1517015
+      }
+    },
+    {
+      "kind": "eval",
+      "step": 250,
+      "epoch": 1,
+      "val": {
+        "loss": 0.224775,
+        "perplexity": 1.252,
+        "token_accuracy": 0.936447,
+        "tokens": 1517015
+      }
+    },
+    {
+      "kind": "eval",
+      "step": 300,
+      "epoch": 1,
+      "val": {
+        "loss": 0.211825,
+        "perplexity": 1.2359,
+        "token_accuracy": 0.938956,
+        "tokens": 1517015
+      }
+    },
+    {
+      "kind": "eval",
+      "step": 350,
+      "epoch": 1,
+      "val": {
+        "loss": 0.202263,
+        "perplexity": 1.2242,
+        "token_accuracy": 0.940802,
+        "tokens": 1517015
+      }
+    },
+    {
+      "kind": "eval",
+      "step": 400,
+      "epoch": 1,
+      "val": {
+        "loss": 0.198556,
+        "perplexity": 1.2196,
+        "token_accuracy": 0.941674,
+        "tokens": 1517015
+      }
+    },
+    {
+      "kind": "eval",
+      "step": 450,
+      "epoch": 1,
+      "val": {
+        "loss": 0.194212,
+        "perplexity": 1.2144,
+        "token_accuracy": 0.942403,
+        "tokens": 1517015
+      }
+    },
+    {
+      "kind": "eval",
+      "step": 500,
+      "epoch": 1,
+      "val": {
+        "loss": 0.19042,
+        "perplexity": 1.2098,
+        "token_accuracy": 0.942753,
+        "tokens": 1517015
+      }
+    },
+    {
+      "kind": "eval",
+      "step": 550,
+      "epoch": 1,
+      "val": {
+        "loss": 0.188858,
+        "perplexity": 1.2079,
+        "token_accuracy": 0.943136,
+        "tokens": 1517015
+      }
+    },
+    {
+      "kind": "eval",
+      "step": 600,
+      "epoch": 1,
+      "val": {
+        "loss": 0.186488,
+        "perplexity": 1.205,
+        "token_accuracy": 0.943575,
+        "tokens": 1517015
+      }
+    },
+    {
+      "kind": "eval",
+      "step": 650,
+      "epoch": 1,
+      "val": {
+        "loss": 0.183543,
+        "perplexity": 1.2015,
+        "token_accuracy": 0.944031,
+        "tokens": 1517015
+      }
+    },
+    {
+      "kind": "eval",
+      "step": 700,
+      "epoch": 1,
+      "val": {
+        "loss": 0.181893,
+        "perplexity": 1.1995,
+        "token_accuracy": 0.944219,
+        "tokens": 1517015
+      }
+    },
+    {
+      "kind": "eval",
+      "step": 750,
+      "epoch": 1,
+      "val": {
+        "loss": 0.180991,
+        "perplexity": 1.1984,
+        "token_accuracy": 0.944246,
+        "tokens": 1517015
+      }
+    },
+    {
+      "kind": "eval",
+      "step": 800,
+      "epoch": 1,
+      "val": {
+        "loss": 0.180698,
+        "perplexity": 1.1981,
+        "token_accuracy": 0.944125,
+        "tokens": 1517015
+      }
+    },
+    {
+      "kind": "eval",
+      "step": 850,
+      "epoch": 1,
+      "val": {
+        "loss": 0.179391,
+        "perplexity": 1.1965,
+        "token_accuracy": 0.944683,
+        "tokens": 1517015
+      }
+    },
+    {
+      "kind": "eval",
+      "step": 900,
+      "epoch": 1,
+      "val": {
+        "loss": 0.17879,
+        "perplexity": 1.1958,
+        "token_accuracy": 0.944511,
+        "tokens": 1517015
+      }
+    },
+    {
+      "kind": "epoch",
+      "epoch": 1,
+      "step": 900,
+      "train_loss": 0.46966,
+      "train_loss_epoch_end": 0.185561,
+      "train_token_accuracy": 0.872577,
+      "val": {
+        "loss": 0.17879,
+        "perplexity": 1.1958,
+        "token_accuracy": 0.944511,
+        "tokens": 1517015
+      }
+    }
+  ],
+  "test_metrics": {
+    "loss": 0.178646,
+    "perplexity": 1.1956,
+    "token_accuracy": 0.944376,
+    "tokens": 1517269
+  },
+  "training_seconds": 1618.41,
+  "timings": {
+    "hardware": 0.02,
+    "preprocess": 5.73,
+    "sanity": 124.35,
+    "train": 1808.08,
+    "total": 1863.51
+  },
+  "samples": [
+    {
+      "question": "What is the grade for student 472468?",
+      "reference": "The grade is A.",
+      "prediction": "The grade is A.",
+      "has_reference": true,
+      "token_f1": 1.0,
+      "exact_match": 1,
+      "numeric_recall": null,
+      "numerals_in_prediction_not_in_reference": []
+    },
+    {
+      "question": "What is the weekly self study hours for student 472468?",
+      "reference": "The weekly self study hours is 21.5 hours per week.",
+      "prediction": "The weekly self study hours is 13.1 hours per week.",
+      "has_reference": true,
+      "token_f1": 0.9,
+      "exact_match": 0,
+      "numeric_recall": 0.0,
+      "numerals_in_prediction_not_in_reference": [
+        "13.1"
+      ]
+    },
+    {
+      "question": "What is the grade for student 410603?",
+      "reference": "The grade is A.",
+      "prediction": "The grade is A.",
+      "has_reference": true,
+      "token_f1": 1.0,
+      "exact_match": 1,
+      "numeric_recall": null,
+      "numerals_in_prediction_not_in_reference": []
+    },
+    {
+      "question": "What is the weekly self study hours for student 410603?",
+      "reference": "The weekly self study hours is 13.1 hours per week.",
+      "prediction": "The weekly self study hours is 17.1 hours per week.",
+      "has_reference": true,
+      "token_f1": 0.9,
+      "exact_match": 0,
+      "numeric_recall": 0.0,
+      "numerals_in_prediction_not_in_reference": [
+        "17.1"
+      ]
+    },
+    {
+      "question": "What is the grade for student 641524?",
+      "reference": "The grade is A.",
+      "prediction": "The grade is B.",
+      "has_reference": true,
+      "token_f1": 0.75,
+      "exact_match": 0,
+      "numeric_recall": null,
+      "numerals_in_prediction_not_in_reference": []
+    },
+    {
+      "question": "What is the weekly self study hours for student 641524?",
+      "reference": "The weekly self study hours is 26 hours per week.",
+      "prediction": "The weekly self study hours is 18.1 hours per week.",
+      "has_reference": true,
+      "token_f1": 0.9,
+      "exact_match": 0,
+      "numeric_recall": 0.0,
+      "numerals_in_prediction_not_in_reference": [
+        "18.1"
+      ]
+    },
+    {
+      "question": "What is the grade for student 669998?",
+      "reference": "The grade is B.",
+      "prediction": "The grade is A.",
+      "has_reference": true,
+      "token_f1": 0.75,
+      "exact_match": 0,
+      "numeric_recall": null,
+      "numerals_in_prediction_not_in_reference": []
+    },
+    {
+      "question": "What is the weekly self study hours for student 669998?",
+      "reference": "The weekly self study hours is 18.7 hours per week.",
+      "prediction": "The weekly self study hours is 17.3 hours per week.",
+      "has_reference": true,
+      "token_f1": 0.9,
+      "exact_match": 0,
+      "numeric_recall": 0.0,
+      "numerals_in_prediction_not_in_reference": [
+        "17.3"
+      ]
+    },
+    {
+      "question": "What is the grade for student 854661?",
+      "reference": "The grade is B.",
+      "prediction": "The grade is A.",
+      "has_reference": true,
+      "token_f1": 0.75,
+      "exact_match": 0,
+      "numeric_recall": null,
+      "numerals_in_prediction_not_in_reference": []
+    },
+    {
+      "question": "What is the weekly self study hours for student 854661?",
+      "reference": "The weekly self study hours is 18.4 hours per week.",
+      "prediction": "The weekly self study hours is 17.7 hours per week.",
+      "has_reference": true,
+      "token_f1": 0.9,
+      "exact_match": 0,
+      "numeric_recall": 0.0,
+      "numerals_in_prediction_not_in_reference": [
+        "17.7"
+      ]
+    },
+    {
+      "question": "What is the grade for student 852906?",
+      "reference": "The grade is D.",
+      "prediction": "The grade is A.",
+      "has_reference": true,
+      "token_f1": 0.75,
+      "exact_match": 0,
+      "numeric_recall": null,
+      "numerals_in_prediction_not_in_reference": []
+    },
+    {
+      "question": "What is the weekly self study hours for student 852906?",
+      "reference": "The weekly self study hours is 7 hours per week.",
+      "prediction": "The weekly self study hours is 13.3 hours per week.",
+      "has_reference": true,
+      "token_f1": 0.9,
+      "exact_match": 0,
+      "numeric_recall": 0.0,
+      "numerals_in_prediction_not_in_reference": [
+        "13.3"
+      ]
+    },
+    {
+      "question": "What does the grade represent?",
+      "reference": "",
+      "prediction": "The weekly self study hours is 17.7 hours per week.",
+      "has_reference": false,
+      "token_f1": null,
+      "exact_match": null,
+      "numeric_recall": null,
+      "numerals_in_prediction_not_in_reference": []
+    },
+    {
+      "question": "Which study behaviour fields are recorded?",
+      "reference": "",
+      "prediction": "The weekly self study hours is 17.2 hours per week.",
+      "has_reference": false,
+      "token_f1": null,
+      "exact_match": null,
+      "numeric_recall": null,
+      "numerals_in_prediction_not_in_reference": []
+    },
+    {
+      "question": "Explain the relationship between attendance and total score.",
+      "reference": "",
+      "prediction": "The weekly self study hours is 17.1 hours per week.",
+      "has_reference": false,
+      "token_f1": null,
+      "exact_match": null,
+      "numeric_recall": null,
+      "numerals_in_prediction_not_in_reference": []
+    },
+    {
+      "question": "Summarise a student record.",
+      "reference": "",
+      "prediction": "The class participation is 7.6 points out of 10.",
+      "has_reference": false,
+      "token_f1": null,
+      "exact_match": null,
+      "numeric_recall": null,
+      "numerals_in_prediction_not_in_reference": []
+    },
+    {
+      "question": "What is the range of weekly self study hours?",
+      "reference": "",
+      "prediction": "The weekly self study hours is 19.9 hours per week.",
+      "has_reference": false,
+      "token_f1": null,
+      "exact_match": null,
+      "numeric_recall": null,
+      "numerals_in_prediction_not_in_reference": []
+    }
+  ],
+  "evaluation": {
+    "test_metrics": {
+      "loss": 0.178646,
+      "perplexity": 1.1956,
+      "token_accuracy": 0.944376,
+      "scored_tokens": 1517269
+    },
+    "qa_generation": {
+      "held_out_questions": 12,
+      "mean_token_f1": 0.8667,
+      "exact_match_rate": 0.1667,
+      "mean_numeric_recall": 0.0,
+      "numeric_questions": 6,
+      "free_form_questions": 5,
+      "generated_numerals_unsupported": 6
+    },
+    "model": {
+      "n_layer": 4,
+      "n_head": 4,
+      "n_embd": 192,
+      "block_size": 128,
+      "vocab_size": 4096,
+      "weights": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\models\\student_performance_slm\\best_model.pt",
+      "n_params": 2557632
+    },
+    "samples": [
+      {
+        "question": "What is the grade for student 472468?",
+        "reference": "The grade is A.",
+        "prediction": "The grade is A.",
+        "has_reference": true,
+        "token_f1": 1.0,
+        "exact_match": 1,
+        "numeric_recall": null,
+        "numerals_in_prediction_not_in_reference": []
+      },
+      {
+        "question": "What is the weekly self study hours for student 472468?",
+        "reference": "The weekly self study hours is 21.5 hours per week.",
+        "prediction": "The weekly self study hours is 13.1 hours per week.",
+        "has_reference": true,
+        "token_f1": 0.9,
+        "exact_match": 0,
+        "numeric_recall": 0.0,
+        "numerals_in_prediction_not_in_reference": [
+          "13.1"
+        ]
+      },
+      {
+        "question": "What is the grade for student 410603?",
+        "reference": "The grade is A.",
+        "prediction": "The grade is A.",
+        "has_reference": true,
+        "token_f1": 1.0,
+        "exact_match": 1,
+        "numeric_recall": null,
+        "numerals_in_prediction_not_in_reference": []
+      },
+      {
+        "question": "What is the weekly self study hours for student 410603?",
+        "reference": "The weekly self study hours is 13.1 hours per week.",
+        "prediction": "The weekly self study hours is 17.1 hours per week.",
+        "has_reference": true,
+        "token_f1": 0.9,
+        "exact_match": 0,
+        "numeric_recall": 0.0,
+        "numerals_in_prediction_not_in_reference": [
+          "17.1"
+        ]
+      },
+      {
+        "question": "What is the grade for student 641524?",
+        "reference": "The grade is A.",
+        "prediction": "The grade is B.",
+        "has_reference": true,
+        "token_f1": 0.75,
+        "exact_match": 0,
+        "numeric_recall": null,
+        "numerals_in_prediction_not_in_reference": []
+      },
+      {
+        "question": "What is the weekly self study hours for student 641524?",
+        "reference": "The weekly self study hours is 26 hours per week.",
+        "prediction": "The weekly self study hours is 18.1 hours per week.",
+        "has_reference": true,
+        "token_f1": 0.9,
+        "exact_match": 0,
+        "numeric_recall": 0.0,
+        "numerals_in_prediction_not_in_reference": [
+          "18.1"
+        ]
+      },
+      {
+        "question": "What is the grade for student 669998?",
+        "reference": "The grade is B.",
+        "prediction": "The grade is A.",
+        "has_reference": true,
+        "token_f1": 0.75,
+        "exact_match": 0,
+        "numeric_recall": null,
+        "numerals_in_prediction_not_in_reference": []
+      },
+      {
+        "question": "What is the weekly self study hours for student 669998?",
+        "reference": "The weekly self study hours is 18.7 hours per week.",
+        "prediction": "The weekly self study hours is 17.3 hours per week.",
+        "has_reference": true,
+        "token_f1": 0.9,
+        "exact_match": 0,
+        "numeric_recall": 0.0,
+        "numerals_in_prediction_not_in_reference": [
+          "17.3"
+        ]
+      },
+      {
+        "question": "What is the grade for student 854661?",
+        "reference": "The grade is B.",
+        "prediction": "The grade is A.",
+        "has_reference": true,
+        "token_f1": 0.75,
+        "exact_match": 0,
+        "numeric_recall": null,
+        "numerals_in_prediction_not_in_reference": []
+      },
+      {
+        "question": "What is the weekly self study hours for student 854661?",
+        "reference": "The weekly self study hours is 18.4 hours per week.",
+        "prediction": "The weekly self study hours is 17.7 hours per week.",
+        "has_reference": true,
+        "token_f1": 0.9,
+        "exact_match": 0,
+        "numeric_recall": 0.0,
+        "numerals_in_prediction_not_in_reference": [
+          "17.7"
+        ]
+      },
+      {
+        "question": "What is the grade for student 852906?",
+        "reference": "The grade is D.",
+        "prediction": "The grade is A.",
+        "has_reference": true,
+        "token_f1": 0.75,
+        "exact_match": 0,
+        "numeric_recall": null,
+        "numerals_in_prediction_not_in_reference": []
+      },
+      {
+        "question": "What is the weekly self study hours for student 852906?",
+        "reference": "The weekly self study hours is 7 hours per week.",
+        "prediction": "The weekly self study hours is 13.3 hours per week.",
+        "has_reference": true,
+        "token_f1": 0.9,
+        "exact_match": 0,
+        "numeric_recall": 0.0,
+        "numerals_in_prediction_not_in_reference": [
+          "13.3"
+        ]
+      },
+      {
+        "question": "What does the grade represent?",
+        "reference": "",
+        "prediction": "The weekly self study hours is 17.7 hours per week.",
+        "has_reference": false,
+        "token_f1": null,
+        "exact_match": null,
+        "numeric_recall": null,
+        "numerals_in_prediction_not_in_reference": []
+      },
+      {
+        "question": "Which study behaviour fields are recorded?",
+        "reference": "",
+        "prediction": "The weekly self study hours is 17.2 hours per week.",
+        "has_reference": false,
+        "token_f1": null,
+        "exact_match": null,
+        "numeric_recall": null,
+        "numerals_in_prediction_not_in_reference": []
+      },
+      {
+        "question": "Explain the relationship between attendance and total score.",
+        "reference": "",
+        "prediction": "The weekly self study hours is 17.1 hours per week.",
+        "has_reference": false,
+        "token_f1": null,
+        "exact_match": null,
+        "numeric_recall": null,
+        "numerals_in_prediction_not_in_reference": []
+      },
+      {
+        "question": "Summarise a student record.",
+        "reference": "",
+        "prediction": "The class participation is 7.6 points out of 10.",
+        "has_reference": false,
+        "token_f1": null,
+        "exact_match": null,
+        "numeric_recall": null,
+        "numerals_in_prediction_not_in_reference": []
+      },
+      {
+        "question": "What is the range of weekly self study hours?",
+        "reference": "",
+        "prediction": "The weekly self study hours is 19.9 hours per week.",
+        "has_reference": false,
+        "token_f1": null,
+        "exact_match": null,
+        "numeric_recall": null,
+        "numerals_in_prediction_not_in_reference": []
+      }
+    ]
+  },
+  "paths": {
+    "models_dir": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\models\\student_performance_slm",
+    "best_model": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\models\\student_performance_slm\\best_model.pt",
+    "final_model": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\models\\student_performance_slm\\final_model.pt",
+    "tokenizer": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\models\\student_performance_slm\\tokenizer",
+    "checkpoints": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\checkpoints"
+  }
+}

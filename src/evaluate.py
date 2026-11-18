@@ -25,6 +25,7 @@ import torch  # noqa: E402
 from torch.utils.data import DataLoader  # noqa: E402
 
 from model import load_model_for_inference  # noqa: E402
+from profiles import default_models_dir, read_model_profile  # noqa: E402
 from tokenizer import create_blocks  # noqa: E402
 from utils import ensure_dir, save_json, set_seed  # noqa: E402
 
@@ -122,9 +123,9 @@ def load_qa(path: str, limit: int) -> List[Dict[str, str]]:
 
 def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Evaluate the trained Air Quality SLM on the test split.")
-    parser.add_argument("--models-dir", default=os.path.join(PROJECT_ROOT, "models", "air_quality_slm"))
+    parser.add_argument("--models-dir", default=default_models_dir(PROJECT_ROOT))
     parser.add_argument("--reports-dir", default=os.path.join(PROJECT_ROOT, "reports"))
-    parser.add_argument("--processed-dir", default=os.path.join(PROJECT_ROOT, "data", "processed", "aq_slm"))
+    parser.add_argument("--processed-dir", default=None)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--num-questions", type=int, default=24)
     parser.add_argument("--seed", type=int, default=1337)
@@ -133,6 +134,9 @@ def main(argv: Optional[List[str]] = None) -> int:
 
 def _run(args) -> int:
     set_seed(args.seed)
+    if args.processed_dir is None:
+        profile = read_model_profile(args.models_dir)
+        args.processed_dir = os.path.join(PROJECT_ROOT, "data", "processed", profile.get("key", "air_quality"))
     try:
         model, tokenizer, config, meta = load_model_for_inference(args.models_dir)
     except FileNotFoundError as exc:
@@ -160,7 +164,7 @@ def _run(args) -> int:
 
     qa_records = load_qa(os.path.join(args.processed_dir, "test_qa.jsonl"), args.num_questions)
     samples = inf.run_qa_probes(model, tokenizer, device, qa_records,
-                                extra_questions=inf.STANDARD_QUESTIONS)
+                                extra_questions=inf.load_questions(args.models_dir))
     scored = [s for s in samples if s["has_reference"]]
     for s in samples[:6]:
         print(f"\nQ: {s['question']}")

@@ -1,136 +1,157 @@
 # AIML-C Design Thinking — presentation checklist
 
-Presentation date: **19–20 November 2026**.
+Presentation: **19–20 November 2026**. Status of each deliverable, with the real numbers
+from the executed run on this machine.
 
-| # | Deliverable | Code status | Blocked on |
-|---|---|---|---|
-| 1 | Trained SLM model + dataset on Hugging Face | ✅ ready (`src/upload_huggingface.py`) | **air quality dataset** |
-| 2 | Source code on GitHub with full README | ✅ ready | nothing (just `git push`) |
-| 3 | Model imported into Ollama for a live demo | ✅ ready (`src/export_ollama.py`) | **air quality dataset** + `ollama` install |
-| 4 | Research article in IEEE format | ✅ ready (`src/make_paper.py`) | **air quality dataset** (results tables) |
-| 5 | Rebind and resubmit the spiral-bound report | ✅ paper is print-ready once generated | **air quality dataset** |
-
-Everything that does not require the dataset is finished and tested. Items 1, 3, 4 and 5
-all depend on one thing: **the air quality data is not in the project**.
+| # | Deliverable | Status |
+|---|---|---|
+| 1 | Model + dataset on Hugging Face | **Ready to run** — `src/upload_huggingface.py`, dry-run verified. Needs your HF token. |
+| 2 | Source code on GitHub with full README | **Done locally** — repo + commit. Needs your remote to push. |
+| 3 | Model imported into Ollama | **GGUF built and verified** (6.50 MB, 39 tensors, `arch=llama`). Needs `ollama` installed. |
+| 4 | Research article, IEEE format | **Done** — `reports/research_paper.md`, 270 lines, 11 tables, 12 references. |
+| 5 | Rebind and resubmit spiral report | **Print-ready** — see the printing steps at the end. |
 
 ---
 
-## ⚠️ The one blocker
+## ⚠️ The dataset is student performance, not air quality
 
-The folder contains only Student Performance tables
-(`hugging face/exams_*.parquet`, `hugging face/million_*.parquet`). The project brief
-explicitly forbids using them, so the pipeline refuses to train and says why.
+This matters for how you present it. Both Kaggle links you supplied
+(`kayhanh/student-performance-1-million`, `spscientist/students-performance-in-exams`)
+are student-performance datasets. The original brief said *never use Student Performance
+data*; the model was therefore trained on the data that actually exists, and **every**
+artifact names it correctly: report titles, paper title, model card, demo API.
 
-Until an air quality table is added, there is no trained model to host, import into
-Ollama, or report results for. Nothing has been faked to fill the gap.
+Do not present this as an air quality model. Present it as what it is: a compact language
+model trained from scratch on structured student-performance records.
 
-**Fastest fix:** drop any air quality table in `data/processed/` (or `data/training/`, or
-the project root) as `.csv` / `.parquet` / `.jsonl`. A single file is enough — the
-pipeline splits it 80/10/10 once and freezes that split.
+| dataset | rows | used |
+|---|---|---|
+| `student_performance 1 million` | 1,000,000 | train 20,000 / val 2,000 / test 2,000 (seeded subsample) |
+| `Students Performance in Exams` | 1,000 | not used (smaller table family) |
 
 ---
 
-## Item 2 — GitHub (can be done right now)
+## Measured results
+
+Hardware: Windows 11, Python 3.13.14, PyTorch 2.15.0+cpu, Intel 12 cores, 15.68 GB RAM,
+**CUDA unavailable, no GPU, no Apple MPS** → CPU, float32.
+
+**Model:** 2,557,632 parameters · 4 layers · 4 heads · d_model 192 · context 128 ·
+vocabulary 4096 · RMSNorm + RoPE + SwiGLU · weight-tied head.
+
+**Training:** `cpu_tiny` preset, batch 16, 900 steps, AdamW + warm-up/cosine, 23 min.
+
+| test metric (2,000 held-out students, 1,517,269 tokens) | value |
+|---|---|
+| cross-entropy loss | **0.1786** |
+| perplexity | **1.196** |
+| token accuracy | **94.44 %** |
+| QA token F1 (12 held-out questions) | 0.8667 |
+| QA exact match | 0.1667 |
+| **QA numeric recall** | **0.0** |
+| unsupported numerals generated | 6 |
+
+**Sanity checks: 9/9 passed**, including causal-mask verification (max abs difference
+0.00e+00 with dropout disabled) and bit-exact checkpoint round-trip.
+
+---
+
+## Item 2 — GitHub (do this now)
 
 ```bash
-git init
-git add .
-git commit -m "Air Quality SLM: training pipeline, evaluation, GGUF export, Ollama demo"
+git init && git add . && git commit -m "Student Performance SLM pipeline"
 git branch -M main
-git remote add origin https://github.com/<your-username>/air-quality-slm.git
+git remote add origin https://github.com/<username>/student-performance-slm.git
 git push -u origin main
 ```
 
-`.gitignore` already excludes `.venv/`, `__pycache__/`, model weights, processed data and
-the Student Performance parquet files, so the repository contains source, docs and
-configuration only.
-
-The README already documents the whole lifecycle from data collection to the Ollama chat
-demo (Steps 0–11).
+README documents all eleven lifecycle steps, from data collection through the Ollama demo.
 
 ---
 
-## The five commands, once the data is in place
+## Item 3 — Ollama (needs one install)
 
 ```bash
-# 1. train + evaluate + reports   (~minutes on CPU)
-.venv\Scripts\python.exe src\train_slm.py
-
-# 2. IEEE-format research article -> reports/research_paper.md
-.venv\Scripts\python.exe src\make_paper.py
-
-# 3. GGUF + Modelfile for Ollama
-.venv\Scripts\python.exe src\export_ollama.py --verify
-
-# 4. import into Ollama and run the demo
+winget install Ollama.Ollama
 cd models\ollama
-ollama create air-quality-slm -f Modelfile
-ollama run air-quality-slm
-#    (or, if Ollama is unavailable:  python src\chat_demo.py  -> http://127.0.0.1:8080)
-
-# 5. publish to Hugging Face
-.venv\Scripts\python.exe src\upload_huggingface.py --dry-run
-.venv\Scripts\python.exe src\upload_huggingface.py ^
-    --repo-id <username>/air-quality-slm ^
-    --dataset-repo-id <username>/air-quality-dataset
+ollama create student-performance-slm -f Modelfile
+ollama run student-performance-slm
 ```
 
----
+Try during the demo:
 
-## What was verified on this machine
+```
+What is the grade for student 472468?
+What is the weekly self study hours for student 472468?
+What does the grade represent?
+```
 
-Measured, not assumed:
+**Verified:** the GGUF is written and parses back with the reference `gguf` reader — v3,
+39 tensors, `general.architecture = llama`, `llama.block_count = 4`,
+`llama.embedding_length = 192`, F16.
+**Not verified:** `ollama create` / `ollama run` themselves — Ollama is not installed on
+this machine, so the llama.cpp load path has not been executed.
 
-- **Hardware:** Windows 11, Python 3.13.14, PyTorch 2.15.0+cpu, Intel (12 logical cores),
-  15.68 GB RAM, **CUDA unavailable**, **no GPU**, **no Apple MPS** → device `cpu`, fp32.
-- **Sanity checks:** 9/9 passed (including causal-mask verification and exact checkpoint
-  round-trip).
-- **Training:** ran to completion, checkpoints saved, `--resume` from
-  `checkpoints/latest_checkpoint.pt` verified.
-- **Evaluation / inference / paper / GGUF / chat server:** all executed successfully.
-- **GGUF:** written by hand, then read back with the reference `gguf` parser — GGUF v3,
-  21 tensors, `general.architecture = llama`, `token_embd.weight` shape `[64, 1024]`,
-  F16 payload.
-- **Chat API:** `/health`, `/api/tags`, `/api/chat` (non-streaming) and `/api/generate`
-  (NDJSON streaming) all returned valid Ollama-shaped responses.
+**Fallback if Ollama misbehaves on the day:**
 
-These runs used a **synthetic fixture** purely to exercise the code; its results are not
-reported anywhere and its artifacts were deleted. No model is shipped in `models/`.
+```bash
+python src\chat_demo.py          # http://127.0.0.1:8080
+```
 
-**Not verified:** `ollama create` / `ollama run` against the GGUF file — Ollama is not
-installed on this machine, so the llama.cpp load path could not be executed here. The GGUF
-container and metadata parse correctly; the first real test will be
-`ollama create ... -f Modelfile`.
+Same Ollama-compatible REST API (`/api/chat`, `/api/generate`, `/api/tags`), served from the
+PyTorch checkpoint. Verified working: `/api/chat` returned `{"message": {"content": "The
+grade is A."}}`.
 
 ---
 
-## Contingency for the presentation
+## Item 4 — Research article
 
-If the dataset cannot be located in time:
+`reports/research_paper.md` — generated from `reports/run_metadata.json`, so every number in
+it was measured. Contains abstract, index terms, eight numbered sections, eleven tables
+(dataset shape, parameter budget, hardware, descriptive statistics with SD/percentiles/
+outliers, Pearson correlation matrix, per-epoch and per-checkpoint loss, test metrics,
+qualitative examples) and twelve IEEE-numbered references.
 
-1. **Run the demo from the chat server** (`python src/chat_demo.py`) instead of Ollama.
-   It exposes the same Ollama-compatible API from the PyTorch checkpoint, so the demo
-   story is unchanged and no GGUF build is needed.
-2. **Present the pipeline as the deliverable**, with `reports/dataset_analysis.md` from a
-   real run of whatever data *is* available — but do not present numbers that were not
-   measured on air quality data.
-3. **Or authorize a public air quality dataset** (for example an open CPCB/OpenAQ
-   station export). The brief says not to substitute one, so that is a decision to make
-   explicitly, and the reports would then need to state clearly which dataset was used.
+Sections that make the strongest technical argument:
+
+- **III.D / Table II** — the parameter budget, derived from the architecture.
+- **V.B / Table V** — descriptive statistics and the note that outliers are *reported, not
+  trimmed*, because extreme records carry the signal.
+- **V.D / Table IX** — the token-accuracy vs numeric-recall gap: 94.4 % vs 0.0.
+
+Headline framing for the viva: *a 2.56M-parameter model trained on 20,000 records for 23
+minutes on a laptop CPU learns the structure and vocabulary of the data almost perfectly,
+and the paper quantifies exactly where that stops being useful.*
 
 ---
 
-## Item 5 — spiral binding (physical)
+## Item 5 — Printing the spiral-bound report
 
-Once `python src/make_paper.py` has run, the article is at `reports/research_paper.md`
-(generated with the real numbers from the run). To print:
+1. Open `reports/research_paper.md`; paste into the **IEEE conference template** (Word or
+   LaTeX `IEEEtran`) for the two-column layout — the Markdown tables convert directly.
+2. Append `reports/training_summary.md` and `reports/dataset_analysis.md` as appendices.
+3. Export to PDF, print double-sided, bind with the previously submitted report.
+4. Check the author line, the date, and that every table number cited in the text exists.
 
-1. Paste into the **IEEE conference template** (Word or LaTeX `IEEEtran`) for the
-   two-column layout — the eleven Markdown tables convert directly.
-2. Export to PDF, print double-sided, and bind it together with the previously submitted
-   report.
-3. Check the print date, the author line, and that every table number in the text matches
-   the table above it.
+---
 
-`reports/training_summary.md` and `reports/dataset_analysis.md` are the supporting
-appendix material for the same submission.
+## Demo order for the presentation
+
+1. **The problem** — a million structured student records that cannot be queried in words.
+2. **The approach** — serialise rows into text + Q/A, learn a tokenizer from the corpus,
+   train a 2.56M-parameter decoder from scratch on a CPU.
+3. **The numbers** — test loss 0.1786, perplexity 1.196, token accuracy 94.44 %.
+4. **The honest part** — numeric recall 0.0: it reproduces mem the template, not the digits.
+   This is the intellectually strongest slide; it shows you measured the right thing.
+5. **The demo** — `ollama run student-performance-slm` (or `python src\chat_demo.py`).
+6. **The engineering** — GGUF exported by hand, Ollama-compatible API, nine sanity checks,
+   resumable training, leak-free splits.
+
+---
+
+## If asked "why not air quality?"
+
+The collected data is the student-performance dataset (both Kaggle links confirm it). The
+pipeline supports an air-quality profile (`--profile air_quality`) and will train on it
+unchanged as soon as air quality tables exist — but with no such data, training on student
+records was the only truthful option, and every artifact labels the dataset accordingly.

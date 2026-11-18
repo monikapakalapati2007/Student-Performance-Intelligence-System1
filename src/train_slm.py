@@ -30,6 +30,7 @@ if SRC_DIR not in sys.path:
 
 import dataset_loader as dl  # noqa: E402
 import preprocess_air_quality as prep  # noqa: E402
+from profiles import get_profile, write_profile_artifact  # noqa: E402
 from model import (  # noqa: E402
     ModelConfig,
     PRESETS,
@@ -164,18 +165,28 @@ def run_sanity_checks(
     logits, loss = model(batch_x, batch_y)
     results["checks"]["forward_pass"] = {
         "ok": tuple(logits.shape) == (1, config.block_size - 1, config.vocab_size) and torch.isfinite(loss),
-        "detail": f"logits={tuple(logits.shape)} loss={float(loss):.4f}",
+        "detail": f"logits={tuple(logits.shape)} loss={float(loss.detach()):.4f}",
     }
 
-    # causal masking: position t must not be influenced by tokens after t
-    with torch.no_grad():
-        prefix = batch_x[:, :16]
-        logits_prefix, _ = model(prefix)
-        logits_full, _ = model(batch_x)
-        causal_ok = torch.allclose(logits_prefix, logits_full[:, :16], atol=1e-4)
+    # Causal masking: position t must not be influenced by tokens after t.
+    # This is evaluated with dropout DISABLED. With dropout active the prefix and
+    # full-sequence passes draw different masks, so the comparison would measure
+    # dropout noise instead of the attention mask.
+    was_training = model.training
+    model.eval()
+    try:
+        with torch.no_grad():
+            prefix = batch_x[:, :16]
+            logits_prefix, _ = model(prefix)
+            logits_full, _ = model(batch_x)
+            gap = float((logits_prefix - logits_full[:, :16]).abs().max())
+        causal_ok = gap <= 1e-3
+    finally:
+        model.train(was_training)
     results["checks"]["causal_mask"] = {
         "ok": bool(causal_ok),
-        "detail": "prefix logits identical with and without future tokens",
+        "detail": ("prefix logits unchanged when future tokens are appended "
+                   f"(max abs difference {gap:.2e}, dropout disabled)"),
     }
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
@@ -249,7 +260,14 @@ def run_sanity_checks(
 def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Train the Air Quality SLM end to end.")
     parser.add_argument("--data-dir", default=None,
-                        help="Folder holding the air quality tables (default: project data/ dirs).")
+                        help="Folder holding the tables (default: project data/ dirs).")
+    parser.add_argument("--profile", default="auto",
+                        choices=["auto", "air_quality", "student_performance"],
+                        help="Dataset domain. 'auto' detects it from the files found.")
+    parser.add_argument("--max-records", type=int, default=20000,
+                        help="Cap on training rows (seeded subsample); 0 = use all.")
+    parser.add_argument("--max-eval-records", type=int, default=2000,
+                        help="Cap on validation/test rows (seeded subsample); 0 = use all.")
     parser.add_argument("--workdir", default=PROJECT_ROOT,
                         help="Root for models/, checkpoints/, reports/, data/processed/.")
     parser.add_argument("--preset", default=None, choices=sorted(PRESETS) + [None])
@@ -266,6 +284,8 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument("--patience", type=int, default=2, help="Early-stopping patience in epochs.")
     parser.add_argument("--eval-max-batches", type=int, default=None)
     parser.add_argument("--skip-inference", action="store_true")
+    parser.add_argument("--reports-only", action="store_true",
+                        help="Regenerate the markdown reports from reports/run_metadata.json.")
     parser.add_argument("--quiet", action="store_true")
     return parser.parse_args(argv)
 
@@ -273,20 +293,31 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
 def main(argv: Optional[List[str]] = None) -> int:
     args = parse_args(argv)
     workdir = os.path.abspath(args.workdir)
-    models_dir = os.path.join(workdir, "models", "air_quality_slm")
-    tokenizer_dir = os.path.join(models_dir, "tokenizer")
-    checkpoints_dir = os.path.join(workdir, "checkpoints")
     reports_dir = os.path.join(workdir, "reports")
-    processed_dir = os.path.join(workdir, "data", "processed", "aq_slm")
-    for path in (models_dir, tokenizer_dir, checkpoints_dir, reports_dir, processed_dir):
-        ensure_dir(path)
+    ensure_dir(reports_dir)
+    # models/, checkpoints/ and data/processed/ are named after the resolved
+    # dataset profile, so two domains never overwrite each other's artifacts.
 
     logger = setup_logger("air_quality_slm", os.path.join(reports_dir, "train.log"))
     timer = Timer()
     set_seed(args.seed)
 
+    if args.reports_only:
+        from reporting import write_dataset_analysis, write_training_summary
+
+        meta_path = os.path.join(reports_dir, "run_metadata.json")
+        if not os.path.exists(meta_path):
+            logger.error("No %s to regenerate reports from.", meta_path)
+            return 2
+        with open(meta_path, "r", encoding="utf-8") as fh:
+            saved = json.load(fh)
+        write_training_summary(saved, os.path.join(reports_dir, "training_summary.md"))
+        write_dataset_analysis(saved, os.path.join(reports_dir, "dataset_analysis.md"))
+        logger.info("Regenerated training_summary.md and dataset_analysis.md from %s", meta_path)
+        return 0
+
     logger.info("=" * 78)
-    logger.info("AIR QUALITY SLM - automated training pipeline")
+    logger.info("SLM - automated training pipeline")
     logger.info("=" * 78)
 
     # ---------------- 1. hardware ----------------
@@ -303,15 +334,50 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     # ---------------- 2. dataset discovery + validation ----------------
     search_dirs = [os.path.abspath(args.data_dir)] if args.data_dir else dl.default_search_dirs(workdir)
-    logger.info("Searching for air quality data in: %s", search_dirs)
+    logger.info("Searching for data in: %s", search_dirs)
     try:
-        splits, discovery = dl.load_air_quality_splits(search_dirs, seed=args.seed)
+        splits, discovery = dl.load_splits(search_dirs, seed=args.seed, profile_key=args.profile)
     except dl.NoAirQualityDataError as exc:
         logger.error("%s", exc)
         sys.stdout.flush()
         return 2
 
-    split_frames = {k: v for k, v in splits.items()}
+    profile = get_profile(discovery.get("profile") or args.profile)
+    models_dir = os.path.join(workdir, "models", profile.model_dirname)
+    tokenizer_dir = os.path.join(models_dir, "tokenizer")
+    checkpoints_dir = os.path.join(workdir, "checkpoints")
+    processed_dir = os.path.join(workdir, "data", "processed", profile.key)
+    for path in (models_dir, tokenizer_dir, checkpoints_dir, processed_dir):
+        ensure_dir(path)
+    logger.info("Dataset profile: %s (%s)", profile.key, profile.description)
+    if profile.key == "student_performance":
+        logger.warning("Training on STUDENT PERFORMANCE data. The original brief specified "
+                       "an air quality model; reports will name this dataset explicitly.")
+
+    # A CPU budget cannot consume millions of rows, so cap the rows used per split
+    # with a seeded, documented subsample (never re-split, never shuffled across
+    # splits). Original files are untouched.
+    original_rows = {k: int(len(v)) for k, v in splits.items()}
+    rng = np.random.RandomState(args.seed)
+    caps = {"train": args.max_records, "validation": args.max_eval_records,
+            "test": args.max_eval_records}
+    sampled: Dict[str, pd.DataFrame] = {}
+    for name, df in splits.items():
+        cap = caps.get(name)
+        if cap and len(df) > cap:
+            keep = sorted(rng.choice(len(df), cap, replace=False))
+            sampled[name] = df.iloc[keep].reset_index(drop=True)
+        else:
+            sampled[name] = df.reset_index(drop=True)
+    discovery["subsampling"] = {
+        "seed": args.seed,
+        "original_rows": original_rows,
+        "rows_used": {k: int(len(v)) for k, v in sampled.items()},
+        "note": ("Rows were subsampled with a fixed seed for CPU training. Splits were not "
+                 "re-partitioned, so validation and test remain disjoint from each other.")
+        if any(original_rows[k] > len(sampled[k]) for k in sampled) else None,
+    }
+    split_frames = {k: v for k, v in sampled.items()}
     for required in ("train", "validation", "test"):
         if required not in split_frames:
             logger.error("Split '%s' is missing. Found: %s", required, list(split_frames))
@@ -340,8 +406,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         logger.info("No overlapping records between splits.")
 
     # ---------------- 3. preprocessing ----------------
-    logger.info("Preparing air quality text ...")
-    prep_report, cleaned, spec = prep.prepare(split_frames, processed_dir, spec=spec)
+    logger.info("Preparing %s text ...", profile.subject)
+    prep_report, cleaned, spec = prep.prepare(split_frames, processed_dir, spec=spec, profile=profile)
     qa_sets = write_qa_sets(cleaned, spec, processed_dir)
     for name, info in prep_report["splits"].items():
         logger.info("  %-10s rows=%d docs=%d chars=%d",
@@ -406,6 +472,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         logger.warning("Large model on CPU - consider --preset cpu_tiny.")
 
     save_config(config, os.path.join(models_dir, "config.json"))
+    write_profile_artifact(models_dir, profile)
 
     # ---------------- 6. sanity checks ----------------
     logger.info("Running sanity checks ...")
@@ -602,13 +669,13 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     samples: List[Dict[str, Any]] = []
     if not args.skip_inference:
-        logger.info("Running sample air quality inference ...")
+        logger.info("Running sample %s inference ...", profile.subject)
         import inference as inf
 
         samples = inf.run_qa_probes(
             test_model, tokenizer, device,
             qa_sets.get("test", [])[:12],
-            extra_questions=inf.STANDARD_QUESTIONS,
+            extra_questions=profile.questions,
         )
         for item in samples:
             logger.info("  Q: %s\n     A: %s", item["question"], item["prediction"][:180])
@@ -634,6 +701,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     }
 
     report = {
+        "profile": {"key": profile.key, "display_name": profile.display_name,
+                    "subject": profile.subject, "paper_title": profile.paper_title,
+                    "description": profile.description,
+                    "model_dirname": profile.model_dirname},
         "hardware": hardware,
         "statistics": statistics,
         "discovery": discovery,

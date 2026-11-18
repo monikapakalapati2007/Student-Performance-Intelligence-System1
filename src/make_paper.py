@@ -101,6 +101,9 @@ def build_paper(meta: Dict[str, Any], evaluation: Optional[Dict[str, Any]]) -> s
     qa = (evaluation or {}).get("qa_generation", {})
     n_params = meta.get("n_params")
     duration = meta.get("training_seconds")
+    profile = meta.get("profile") or {}
+    title = profile.get("paper_title") or TITLE
+    subject = profile.get("subject") or "air quality"
     has_qa = bool(qa and qa.get("held_out_questions"))
     if has_qa:
         qa_sentence = (
@@ -124,7 +127,7 @@ def build_paper(meta: Dict[str, Any], evaluation: Optional[Dict[str, Any]]) -> s
     total_chars = prep.get("total_characters")
 
     L: List[str] = []
-    L.append(f"# {TITLE}")
+    L.append(f"# {title}")
     L.append("")
     L.append("*Author: [name], Department of Artificial Intelligence and Machine Learning*")
     L.append("")
@@ -136,10 +139,10 @@ def build_paper(meta: Dict[str, Any], evaluation: Optional[Dict[str, Any]]) -> s
     L.append("## Abstract")
     L.append("")
     L.append(
-        f"Air quality monitoring produces large volumes of structurally identical numerical "
+        f"Structured {subject} data arrives as large volumes of structurally identical numerical "
         f"records that are difficult to query in natural language. This paper presents a "
         f"compact decoder-only Transformer small language model (SLM) trained from scratch on "
-        f"a project-specific air quality corpus of {_f(train_rows)} training records, serialised "
+        f"a project-specific {subject} corpus of {_f(train_rows)} training records, serialised "
         f"into {_f(total_docs)} textual documents. The model uses rotary position embeddings, "
         f"RMS normalisation and SwiGLU feed-forward blocks, and contains "
         f"{_f(n_params)} parameters \u2014 three orders of magnitude smaller than contemporary "
@@ -153,7 +156,7 @@ def build_paper(meta: Dict[str, Any], evaluation: Optional[Dict[str, Any]]) -> s
         f"{_f((test.get('token_accuracy') or 0) * 100, 2)}%. {qa_sentence} The model is "
         f"exported to GGUF and served through Ollama for interactive demonstration. Results "
         f"show that a domain-specific SLM can learn the vocabulary, structure and statistical "
-        f"regularities of air quality data at negligible compute cost, while also quantifying "
+        f"regularities of {subject} data at negligible compute cost, while also quantifying "
         f"its remaining limitations in factual generation."
     )
     L.append("")
@@ -433,11 +436,17 @@ def build_paper(meta: Dict[str, Any], evaluation: Optional[Dict[str, Any]]) -> s
         L.append(_table(["Variable", "Mean", "SD", "Min", "P5", "Median", "P95", "Max",
                          "Outliers (3\u00b7IQR)"], rows,
                         "TABLE V. Descriptive statistics of numeric variables (training split)."))
-        L.append(
-            "Outlier counts are reported, not corrected. In air quality data the right tail is "
-            "the phenomenon of interest \u2014 severe pollution episodes \u2014 so trimming it "
-            "would remove the signal the model is meant to describe."
-        )
+        if (profile.get("key") or "air_quality") == "air_quality":
+            L.append(
+                "Outlier counts are reported, not corrected. In air quality data the right tail "
+                "is the phenomenon of interest \u2014 severe pollution episodes \u2014 so trimming "
+                "it would remove the signal the model is meant to describe."
+            )
+        else:
+            L.append(
+                "Outlier counts are reported, not corrected, so that extreme records remain "
+                "visible to the model and to the reader rather than being silently trimmed."
+            )
         L.append("")
 
     corr = stats.get("correlation") or {}
@@ -589,8 +598,8 @@ def build_paper(meta: Dict[str, Any], evaluation: Optional[Dict[str, Any]]) -> s
     L.append("## VIII. Conclusion and Future Work")
     L.append("")
     L.append(
-        "This paper documented the ideation, construction and evaluation of a compact air "
-        "quality language model built entirely from a project-specific dataset. A "
+        f"This paper documented the ideation, construction and evaluation of a compact {subject} "
+        f"language model built entirely from a project-specific dataset. A "
         "byte-level tokenizer, a RoPE/RMSNorm/SwiGLU decoder and a leak-free serialisation "
         "pipeline together produce a model that reaches "
         f"{_f((test.get('token_accuracy') or 0) * 100, 1)}% teacher-forced token accuracy and "

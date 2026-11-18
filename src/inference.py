@@ -22,6 +22,7 @@ if SRC_DIR not in sys.path:
 import torch  # noqa: E402
 
 from model import load_model_for_inference  # noqa: E402
+from profiles import default_models_dir, read_model_profile  # noqa: E402
 
 QA_HEADER = "### Question and answer"
 Q_PREFIX = "Question:"
@@ -38,6 +39,20 @@ STANDARD_QUESTIONS: List[str] = [
     "Explain the relationship between particulate matter and weather conditions.",
     "What does the Air Quality Index summarise?",
 ]
+
+
+def load_questions(models_dir: str) -> List[str]:
+    """Profile-appropriate demo questions, saved beside the trained weights."""
+    path = os.path.join(models_dir, "profile.json")
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                questions = json.load(fh).get("questions") or []
+            if questions:
+                return list(questions)
+        except Exception:
+            pass
+    return list(STANDARD_QUESTIONS)
 
 
 def build_prompt(question: str, context: Optional[str] = None) -> str:
@@ -161,9 +176,9 @@ def run_qa_probes(
 # --------------------------------------------------------------------------- #
 def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run the trained Air Quality SLM.")
-    parser.add_argument("--models-dir", default=os.path.join(PROJECT_ROOT, "models", "air_quality_slm"))
+    parser.add_argument("--models-dir", default=default_models_dir(PROJECT_ROOT))
     parser.add_argument("--reports-dir", default=os.path.join(PROJECT_ROOT, "reports"))
-    parser.add_argument("--processed-dir", default=os.path.join(PROJECT_ROOT, "data", "processed", "aq_slm"))
+    parser.add_argument("--processed-dir", default=None)
     parser.add_argument("--question", default=None, help="Answer a single question and exit.")
     parser.add_argument("--interactive", action="store_true")
     parser.add_argument("--num-samples", type=int, default=8, help="Held-out QA pairs to probe.")
@@ -196,6 +211,10 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 2
     device = torch.device(meta["device"])
     model.to(device)
+    if args.processed_dir is None:
+        profile_meta = read_model_profile(args.models_dir)
+        args.processed_dir = os.path.join(PROJECT_ROOT, "data", "processed",
+                                          profile_meta.get("key", "air_quality"))
     print(f"Loaded {meta['weights_path']} ({config.n_layer} layers, {config.n_embd} d_model, "
           f"vocab {config.vocab_size}) on {device.type}")
     print(f"Trained for {meta.get('step')} steps | best val loss {meta.get('best_val')}\n")
@@ -223,7 +242,7 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     qa_records = _load_test_qa(os.path.join(args.processed_dir, "test_qa.jsonl"), args.num_samples)
     results = run_qa_probes(model, tokenizer, device, qa_records,
-                            extra_questions=STANDARD_QUESTIONS,
+                            extra_questions=load_questions(args.models_dir),
                             temperature=args.temperature, max_new_tokens=args.max_new_tokens)
     for item in results:
         print(f"Q: {item['question']}")

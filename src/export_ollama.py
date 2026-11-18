@@ -32,6 +32,7 @@ import numpy as np  # noqa: E402
 import torch  # noqa: E402
 
 from model import ModelConfig, build_model, load_checkpoint  # noqa: E402
+from profiles import default_models_dir, read_model_profile  # noqa: E402
 from tokenizer import ByteLevelBPETokenizer  # noqa: E402
 
 GGUF_MAGIC = b"GGUF"
@@ -221,7 +222,7 @@ def checkpoint_to_llama_tensors(state: Dict[str, torch.Tensor], config: ModelCon
 
 
 def build_gguf(state: Dict[str, torch.Tensor], config: ModelConfig, tokenizer: ByteLevelBPETokenizer,
-               out_path: str, dtype: np.dtype, model_name: str) -> Dict[str, Any]:
+               out_path: str, dtype: np.dtype, model_name: str, description: str = "") -> Dict[str, Any]:
     writer = GGUFWriter(out_path)
     ff_hidden = int(state["blocks.0.mlp.w1.weight"].shape[0])
 
@@ -229,7 +230,7 @@ def build_gguf(state: Dict[str, torch.Tensor], config: ModelConfig, tokenizer: B
     writer.add_string("general.name", model_name)
     writer.add_u32("general.file_type", GGML_TYPE_F16 if dtype == np.float16 else GGML_TYPE_F32)
     writer.add_string("general.description",
-                      "Air Quality SLM: small decoder-only Transformer trained on air quality records")
+                      f"Small decoder-only Transformer trained on {description or 'project records'}")
     writer.add_u32("llama.context_length", config.block_size)
     writer.add_u32("llama.embedding_length", config.n_embd)
     writer.add_u32("llama.block_count", config.n_layer)
@@ -332,7 +333,7 @@ def verify_gguf(path: str) -> Dict[str, Any]:
 
 def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Export the Air Quality SLM to GGUF + Ollama Modelfile.")
-    parser.add_argument("--models-dir", default=os.path.join(PROJECT_ROOT, "models", "air_quality_slm"))
+    parser.add_argument("--models-dir", default=default_models_dir(PROJECT_ROOT))
     parser.add_argument("--out-dir", default=os.path.join(PROJECT_ROOT, "models", "ollama"))
     parser.add_argument("--weights", default="best_model.pt", help="checkpoint file inside --models-dir")
     parser.add_argument("--dtype", default="f16", choices=["f16", "f32"],
@@ -362,7 +363,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     print(f"Converting {weights}")
     print(f"  arch=llama  layers={config.n_layer} heads={config.n_head} "
           f"d_model={config.n_embd} ctx={config.block_size} vocab={config.vocab_size}")
-    info = build_gguf(payload["model_state"], config, tokenizer, out_path, dtype, args.name)
+    model_profile = read_model_profile(args.models_dir)
+    info = build_gguf(payload["model_state"], config, tokenizer, out_path, dtype, args.name,
+                      description=model_profile.get("description", ""))
     print(f"  wrote {info['path']} ({info['size_bytes'] / 1024 ** 2:.2f} MB, "
           f"{info['tensor_count']} tensors, {info['metadata_keys']} metadata keys, {info['dtype']})")
 

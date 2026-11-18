@@ -1,0 +1,15 @@
+{
+  "key": "student_performance",
+  "display_name": "Student Performance SLM",
+  "subject": "student performance",
+  "category_label": "Grade",
+  "identity_label": "student",
+  "description": "student performance (study hours, attendance, participation, score, grade)",
+  "questions": [
+    "What does the grade represent?",
+    "Which study behaviour fields are recorded?",
+    "Explain the relationship between attendance and total score.",
+    "Summarise a student record.",
+    "What is the range of weekly self study hours?"
+  ]
+}

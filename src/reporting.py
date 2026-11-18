@@ -36,7 +36,9 @@ def write_dataset_analysis(report: Dict[str, Any], path: str) -> None:
     prep = report.get("preprocessing", {})
     spec = report.get("field_spec", {})
 
-    out: List[str] = ["# Air Quality Dataset Analysis", ""]
+    header_profile = report.get("profile") or {}
+    header_subject = header_profile.get("subject") or "air quality"
+    out: List[str] = [f"# {header_subject.title()} Dataset Analysis", ""]
     out.append("Generated automatically by `src/train_slm.py`. Every number below was "
                "measured on the files found in the project at run time.")
     out.append("")
@@ -187,23 +189,30 @@ def write_training_summary(report: Dict[str, Any], path: str) -> None:
     prep = report.get("preprocessing", {})
     samples = report.get("samples", [])
     timings = report.get("timings", {})
+    profile = report.get("profile") or {}
+    display_name = profile.get("display_name") or "Air Quality SLM"
+    subject = profile.get("subject") or "air quality"
 
-    out: List[str] = ["# Air Quality SLM — Training Summary", ""]
+    out: List[str] = [f"# {display_name} — Training Summary", ""]
     out.append("## 1. Project description")
     out.append("")
     out.append(
-        "A compact decoder-only causal Transformer language model (≈2–6M parameters) trained "
-        "from scratch on structured Air Quality records. Each measurement row is serialised into "
-        "readable text (location, time, pollutant concentrations, weather, air quality category) "
-        "together with deterministic question/answer pairs derived only from the fields present in "
-        "the row. The model therefore learns the vocabulary and relationships of the dataset rather "
-        "than memorising a general-purpose web corpus. No pretrained weights are used."
+        f"A compact decoder-only causal Transformer language model (≈2–6M parameters) trained "
+        f"from scratch on structured {subject} records. Each record is serialised into readable "
+        f"text together with deterministic question/answer pairs derived only from the fields "
+        f"present in the row. The model therefore learns the vocabulary and relationships of the "
+        f"dataset rather than memorising a general-purpose web corpus. No pretrained weights are used."
     )
     out.append("")
 
     out.append("## 2. Dataset information")
     out.append("")
+    out.append(f"- Dataset profile: **{profile.get('key', 'n/a')}** ({subject})")
     out.append(f"- Discovery: {report.get('discovery', {}).get('source', 'n/a')}")
+    subsample = (report.get("discovery") or {}).get("subsampling") or {}
+    if subsample.get("note"):
+        out.append(f"- Rows used: {subsample.get('rows_used')} of {subsample.get('original_rows')} "
+                   f"(seeded subsample, seed {subsample.get('seed')})")
     rows = []
     for name, info in (report.get("analyses") or {}).items():
         prep_info = prep.get("splits", {}).get(name, {})

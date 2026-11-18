@@ -1,0 +1,95 @@
+{
+  "checks": {
+    "dataset_non_empty": {
+      "ok": true,
+      "detail": "119463 training blocks"
+    },
+    "tokenizer_roundtrip": {
+      "ok": true,
+      "detail": "'PM2.5 is 85 micrograms per cubic metre in Delhi.'"
+    },
+    "tensor_shapes": {
+      "ok": true,
+      "detail": "x=(127,) y=(127,) shift_ok=True"
+    },
+    "forward_pass": {
+      "ok": "tensor(True)",
+      "detail": "logits=(1, 127, 4096) loss=8.2337"
+    },
+    "causal_mask": {
+      "ok": true,
+      "detail": "prefix logits unchanged when future tokens are appended (max abs difference 0.00e+00, dropout disabled)"
+    },
+    "backpropagation": {
+      "ok": true,
+      "detail": "30 tensors with grads, all finite=True"
+    },
+    "parameters_update": {
+      "ok": true,
+      "detail": "weights changed after one AdamW step"
+    },
+    "loss_decreases": {
+      "ok": true,
+      "detail": "25 overfit steps on one batch: 7.4989 -> 2.8218",
+      "curve": [
+        7.4989,
+        7.0502,
+        6.0136,
+        5.1138,
+        4.4053,
+        3.8633,
+        3.5001,
+        3.291,
+        3.177,
+        3.0964,
+        3.0607,
+        3.0082,
+        2.9638,
+        2.9475,
+        2.9298,
+        2.9357,
+        2.9297,
+        2.879,
+        2.8787,
+        2.889,
+        2.8867,
+        2.868,
+        2.846,
+        2.8478,
+        2.8218
+      ]
+    },
+    "checkpoint_roundtrip": {
+      "ok": true,
+      "detail": "reloaded checkpoint reproduces logits exactly"
+    }
+  },
+  "passed": true,
+  "loss_curve_25_steps": [
+    7.4989,
+    7.0502,
+    6.0136,
+    5.1138,
+    4.4053,
+    3.8633,
+    3.5001,
+    3.291,
+    3.177,
+    3.0964,
+    3.0607,
+    3.0082,
+    2.9638,
+    2.9475,
+    2.9298,
+    2.9357,
+    2.9297,
+    2.879,
+    2.8787,
+    2.889,
+    2.8867,
+    2.868,
+    2.846,
+    2.8478,
+    2.8218
+  ]
+}
