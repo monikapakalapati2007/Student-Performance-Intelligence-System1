@@ -1,0 +1,24 @@
+# ---- Air Quality SLM pipeline ----
+# Tested with Python 3.13, PyTorch 2.15 (CPU). CPU-only PyTorch is sufficient.
+torch>=2.1.0          # decoder-only Transformer implementation and training loop
+numpy>=1.24.0         # numeric helpers, seed control
+pandas>=2.0.0         # dataset loading, validation and analysis
+pyarrow>=14.0.0       # parquet read/write (required by pandas for .parquet)
+
+# No pretrained model, tokenizer or dataset download is required: the tokenizer and
+# the model are trained from scratch on this project's own air quality records.
+#
+# Windows CPU-only install (smaller download):
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+#
+# Optional, only if you later want to upload the finished weights to Hugging Face:
+#   huggingface_hub>=0.23.0
+
+
+# ---- Unrelated tooling kept from the previous contents of this project ----
+# markitdown-validator - tested with Python 3.12.3 (works on Python 3.9+)
+markitdown[pdf]>=0.1.5     # Microsoft MarkItDown (only needed for --generate-md / selftest without --md)
+pdfminer.six>=20231228     # column-aware PDF text extraction (primary reference extractor)
+pdfplumber>=0.11.0         # fallback extractor + per-page image counts
+pypdf>=5.0.0               # dependency of markitdown PDF handling
+PyYAML>=6.0                # needed by the skill packaging/validation tooling only

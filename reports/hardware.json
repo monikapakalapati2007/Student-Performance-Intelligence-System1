@@ -1,0 +1,19 @@
+{
+  "os": "Windows 11 (AMD64)",
+  "python_version": "3.13.14",
+  "python_executable": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\.venv\\Scripts\\python.exe",
+  "torch_version": "2.15.0+cpu",
+  "cpu_name": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel",
+  "cpu_count": 12,
+  "total_ram_gb": 15.68,
+  "cuda_available": false,
+  "cuda_version": null,
+  "cuda_device_count": 0,
+  "gpu_names": [],
+  "gpu_total_vram_gb": null,
+  "gpu_free_vram_gb": null,
+  "mps_available": false,
+  "selected_device": "cpu",
+  "precision": "float32",
+  "threads": 8
+}
