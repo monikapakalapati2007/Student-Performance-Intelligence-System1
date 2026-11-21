@@ -1,0 +1,210 @@
+{
+  "note": "original files are read-only; processed copies live in data/processed/tabular/",
+  "datasets": {
+    "million": {
+      "files": {
+        "hugging face\\million_test.parquet": {
+          "split": "test",
+          "columns": [
+            "student_id",
+            "weekly_self_study_hours",
+            "attendance_percentage",
+            "class_participation",
+            "total_score",
+            "grade"
+          ],
+          "dtypes": {
+            "student_id": "int64",
+            "weekly_self_study_hours": "float64",
+            "attendance_percentage": "float64",
+            "class_participation": "float64",
+            "total_score": "float64",
+            "grade": "str"
+          }
+        },
+        "hugging face\\million_train_.parquet": {
+          "split": "train",
+          "columns": [
+            "student_id",
+            "weekly_self_study_hours",
+            "attendance_percentage",
+            "class_participation",
+            "total_score",
+            "grade"
+          ],
+          "dtypes": {
+            "student_id": "int64",
+            "weekly_self_study_hours": "float64",
+            "attendance_percentage": "float64",
+            "class_participation": "float64",
+            "total_score": "float64",
+            "grade": "str"
+          }
+        },
+        "hugging face\\million_validation.parquet": {
+          "split": "validation",
+          "columns": [
+            "student_id",
+            "weekly_self_study_hours",
+            "attendance_percentage",
+            "class_participation",
+            "total_score",
+            "grade"
+          ],
+          "dtypes": {
+            "student_id": "int64",
+            "weekly_self_study_hours": "float64",
+            "attendance_percentage": "float64",
+            "class_participation": "float64",
+            "total_score": "float64",
+            "grade": "str"
+          }
+        }
+      },
+      "rows_total": 1000000
+    },
+    "exams": {
+      "files": {
+        "data\\splits\\exams_test.csv": {
+          "split": "test",
+          "columns": [
+            "gender",
+            "race/ethnicity",
+            "parental level of education",
+            "lunch",
+            "test preparation course",
+            "math score",
+            "reading score",
+            "writing score"
+          ],
+          "dtypes": {
+            "gender": "str",
+            "race/ethnicity": "str",
+            "parental level of education": "str",
+            "lunch": "str",
+            "test preparation course": "str",
+            "math score": "int64",
+            "reading score": "int64",
+            "writing score": "int64"
+          }
+        },
+        "hugging face\\exams_test.parquet": {
+          "split": "test",
+          "columns": [
+            "gender",
+            "race/ethnicity",
+            "parental level of education",
+            "lunch",
+            "test preparation course",
+            "math score",
+            "reading score",
+            "writing score"
+          ],
+          "dtypes": {
+            "gender": "str",
+            "race/ethnicity": "str",
+            "parental level of education": "str",
+            "lunch": "str",
+            "test preparation course": "str",
+            "math score": "int64",
+            "reading score": "int64",
+            "writing score": "int64"
+          }
+        },
+        "data\\splits\\exams_train.csv": {
+          "split": "train",
+          "columns": [
+            "gender",
+            "race/ethnicity",
+            "parental level of education",
+            "lunch",
+            "test preparation course",
+            "math score",
+            "reading score",
+            "writing score"
+          ],
+          "dtypes": {
+            "gender": "str",
+            "race/ethnicity": "str",
+            "parental level of education": "str",
+            "lunch": "str",
+            "test preparation course": "str",
+            "math score": "int64",
+            "reading score": "int64",
+            "writing score": "int64"
+          }
+        },
+        "hugging face\\exams_train.parquet": {
+          "split": "train",
+          "columns": [
+            "gender",
+            "race/ethnicity",
+            "parental level of education",
+            "lunch",
+            "test preparation course",
+            "math score",
+            "reading score",
+            "writing score"
+          ],
+          "dtypes": {
+            "gender": "str",
+            "race/ethnicity": "str",
+            "parental level of education": "str",
+            "lunch": "str",
+            "test preparation course": "str",
+            "math score": "int64",
+            "reading score": "int64",
+            "writing score": "int64"
+          }
+        },
+        "data\\splits\\exams_validation.csv": {
+          "split": "validation",
+          "columns": [
+            "gender",
+            "race/ethnicity",
+            "parental level of education",
+            "lunch",
+            "test preparation course",
+            "math score",
+            "reading score",
+            "writing score"
+          ],
+          "dtypes": {
+            "gender": "str",
+            "race/ethnicity": "str",
+            "parental level of education": "str",
+            "lunch": "str",
+            "test preparation course": "str",
+            "math score": "int64",
+            "reading score": "int64",
+            "writing score": "int64"
+          }
+        },
+        "hugging face\\exams_validation.parquet": {
+          "split": "validation",
+          "columns": [
+            "gender",
+            "race/ethnicity",
+            "parental level of education",
+            "lunch",
+            "test preparation course",
+            "math score",
+            "reading score",
+            "writing score"
+          ],
+          "dtypes": {
+            "gender": "str",
+            "race/ethnicity": "str",
+            "parental level of education": "str",
+            "lunch": "str",
+            "test preparation course": "str",
+            "math score": "int64",
+            "reading score": "int64",
+            "writing score": "int64"
+          }
+        }
+      },
+      "rows_total": 2000
+    }
+  }
+}

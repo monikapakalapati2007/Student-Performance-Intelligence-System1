@@ -1,0 +1,87 @@
+{
+  "million": {
+    "dataset": "million",
+    "feature_names": [
+      "weekly_self_study_hours",
+      "attendance_percentage",
+      "class_participation",
+      "effort_index",
+      "study_attendance_product",
+      "participation_per_study_hour"
+    ],
+    "raw_features": [
+      "weekly_self_study_hours",
+      "attendance_percentage",
+      "class_participation"
+    ],
+    "engineered_features": [
+      "effort_index",
+      "study_attendance_product",
+      "participation_per_study_hour"
+    ],
+    "target_column": "total_score",
+    "grade_column": "grade",
+    "grade_labels": [
+      "F",
+      "D",
+      "C",
+      "B",
+      "A"
+    ],
+    "grade_to_index": {
+      "F": 0,
+      "D": 1,
+      "C": 2,
+      "B": 3,
+      "A": 4
+    },
+    "grade_cutoffs": {
+      "A": 85.0,
+      "B": 70.0,
+      "C": 55.0,
+      "D": 40.0
+    },
+    "study_cap_hours": 40.0,
+    "n_features": 6
+  },
+  "exams": {
+    "dataset": "exams",
+    "categorical_features": [
+      "gender",
+      "race/ethnicity",
+      "parental level of education",
+      "lunch",
+      "test preparation course"
+    ],
+    "feature_names": [
+      "gender_female",
+      "gender_male",
+      "race/ethnicity_group A",
+      "race/ethnicity_group B",
+      "race/ethnicity_group C",
+      "race/ethnicity_group D",
+      "race/ethnicity_group E",
+      "parental level of education_associate's degree",
+      "parental level of education_bachelor's degree",
+      "parental level of education_high school",
+      "parental level of education_master's degree",
+      "parental level of education_some college",
+      "parental level of education_some high school",
+      "lunch_free/reduced",
+      "lunch_standard",
+      "test preparation course_completed",
+      "test preparation course_none"
+    ],
+    "target_column": "math score",
+    "category_cutoffs": {
+      "needs improvement": 60.0,
+      "satisfactory": 80.0
+    },
+    "categories": [
+      "needs improvement",
+      "satisfactory",
+      "good"
+    ],
+    "n_features": 17
+  }
+}

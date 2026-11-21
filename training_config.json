@@ -1,0 +1,141 @@
+{
+  "seed": 1337,
+  "dataset_selection": {
+    "primary": "million",
+    "secondary": "exams",
+    "reason": "the 1M-record table has 3 behavioural features plus a continuous score and a grade label; the 1k exams table has 5 categorical features and three exam scores. They share no columns and no key, so they are trained separately."
+  },
+  "tasks": {
+    "regression": {
+      "target": "total_score",
+      "features": [
+        "weekly_self_study_hours",
+        "attendance_percentage",
+        "class_participation",
+        "effort_index",
+        "study_attendance_product",
+        "participation_per_study_hour"
+      ]
+    },
+    "classification": {
+      "target": "grade",
+      "features": [
+        "weekly_self_study_hours",
+        "attendance_percentage",
+        "class_participation",
+        "effort_index",
+        "study_attendance_product",
+        "participation_per_study_hour"
+      ],
+      "note": "total_score is never used as an input feature"
+    }
+  },
+  "sanity_check": {
+    "n_train": 5000,
+    "n_eval": 2000,
+    "max_iter": 25,
+    "mlp_max_iter": 2,
+    "mlp_rows": 8000
+  },
+  "candidates": {
+    "ridge": {
+      "enabled": true,
+      "alpha": 1.0
+    },
+    "random_forest": {
+      "enabled": true,
+      "n_estimators": 120,
+      "max_depth": 18,
+      "min_samples_leaf": 20,
+      "max_samples": 300000
+    },
+    "hist_gradient_boosting": {
+      "enabled": true,
+      "max_iter": 400,
+      "learning_rate": 0.06,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 40,
+      "l2_regularization": 1.0,
+      "early_stopping": true,
+      "n_iter_no_change": 20,
+      "validation_fraction": 0.1
+    },
+    "mlp": {
+      "enabled": true,
+      "hidden_layer_sizes": [
+        64,
+        32
+      ],
+      "alpha": 0.001,
+      "batch_size": 512,
+      "learning_rate_init": 0.001,
+      "max_iter": 40,
+      "early_stopping": true,
+      "n_iter_no_change": 6,
+      "max_samples": 200000
+    }
+  },
+  "hyperparameter_search": {
+    "enabled": true,
+    "max_trials": 3,
+    "hist_gradient_boosting": [
+      {
+        "max_iter": 300,
+        "learning_rate": 0.05,
+        "max_leaf_nodes": 31,
+        "min_samples_leaf": 40,
+        "l2_regularization": 1.0
+      },
+      {
+        "max_iter": 300,
+        "learning_rate": 0.08,
+        "max_leaf_nodes": 63,
+        "min_samples_leaf": 20,
+        "l2_regularization": 0.5
+      },
+      {
+        "max_iter": 500,
+        "learning_rate": 0.04,
+        "max_leaf_nodes": 15,
+        "min_samples_leaf": 80,
+        "l2_regularization": 2.0
+      }
+    ]
+  },
+  "grade_classifier": {
+    "candidates": [
+      "hist_gradient_boosting",
+      "random_forest"
+    ],
+    "hist_gradient_boosting": {
+      "max_iter": 200,
+      "learning_rate": 0.08,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 40,
+      "early_stopping": true,
+      "n_iter_no_change": 15
+    },
+    "random_forest": {
+      "n_estimators": 80,
+      "max_depth": 16,
+      "min_samples_leaf": 20,
+      "class_weight": "balanced_subsample",
+      "max_samples": 300000
+    }
+  },
+  "exams_model": {
+    "enabled": true,
+    "target": "math score",
+    "max_iter": 300,
+    "learning_rate": 0.05,
+    "max_leaf_nodes": 15,
+    "l2_regularization": 1.0,
+    "early_stopping": true,
+    "n_iter_no_change": 20
+  },
+  "inference": {
+    "sample_rows": 5,
+    "importance_rows": 15000,
+    "importance_repeats": 3
+  }
+}

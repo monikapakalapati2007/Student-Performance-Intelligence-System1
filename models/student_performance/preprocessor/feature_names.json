@@ -1,0 +1,39 @@
+{
+  "million_features": [
+    "weekly_self_study_hours",
+    "attendance_percentage",
+    "class_participation",
+    "effort_index",
+    "study_attendance_product",
+    "participation_per_study_hour"
+  ],
+  "million_target": "total_score",
+  "million_grade_column": "grade",
+  "exams_features": [
+    "gender",
+    "race/ethnicity",
+    "parental level of education",
+    "lunch",
+    "test preparation course"
+  ],
+  "exams_target": "math score",
+  "exams_feature_names": [
+    "gender_female",
+    "gender_male",
+    "race/ethnicity_group A",
+    "race/ethnicity_group B",
+    "race/ethnicity_group C",
+    "race/ethnicity_group D",
+    "race/ethnicity_group E",
+    "parental level of education_associate's degree",
+    "parental level of education_bachelor's degree",
+    "parental level of education_high school",
+    "parental level of education_master's degree",
+    "parental level of education_some college",
+    "parental level of education_some high school",
+    "lunch_free/reduced",
+    "lunch_standard",
+    "test preparation course_completed",
+    "test preparation course_none"
+  ]
+}

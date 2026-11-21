@@ -17,6 +17,7 @@ import sys
 import threading
 import time
 from datetime import datetime, timezone
+from html import escape
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, Dict, List, Optional
 
@@ -40,7 +41,7 @@ INDEX_HTML = """<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Air Quality SLM</title>
+<title>__TITLE__</title>
 <style>
   :root { --bg:#0f1720; --panel:#17222e; --ink:#e8eef5; --muted:#8fa3b8;
           --accent:#3fa9f5; --user:#1f3b52; --bot:#1b2836; }
@@ -70,10 +71,10 @@ INDEX_HTML = """<!doctype html>
 </style>
 </head>
 <body>
-<header><h1>Air Quality SLM</h1><span id="status">loading model…</span></header>
+<header><h1>__TITLE__</h1><span id="status">loading model…</span></header>
 <div id="log">
-  <div class="msg bot"><div class="role">assistant</div>Ask me about the air quality
-  measurements in the dataset — pollutant levels, weather context, or air quality categories.</div>
+  <div class="msg bot"><div class="role">assistant</div>Ask me about the __SUBJECT__
+  records in this dataset — a grade, a score, study hours, attendance or participation.</div>
 </div>
 <div class="chips" id="chips"></div>
 <footer>
@@ -131,9 +132,14 @@ def _now() -> str:
 
 
 def answer(question: str, max_new_tokens: int = 96) -> str:
+    """Generate an answer, grounded on the referenced record when one is found."""
+    context = None
+    index = STATE.get("index")
+    if index is not None:
+        _, context = index.retrieve(question)
     with STATE["lock"]:
         return generate_answer(STATE["model"], STATE["tokenizer"], question, STATE["device"],
-                               max_new_tokens=max_new_tokens, temperature=0.2)
+                               context=context, max_new_tokens=max_new_tokens, temperature=0.2)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -184,7 +190,10 @@ class Handler(BaseHTTPRequestHandler):
         path = self.path.split("?")[0]
         if path in ("/", "/index.html"):
             chips = STATE.get("questions") or STANDARD_QUESTIONS
-            html = INDEX_HTML.replace("__CHIPS__", json.dumps(chips[:4]))
+            html = (INDEX_HTML
+                    .replace("__CHIPS__", json.dumps(chips[:4]))
+                    .replace("__TITLE__", escape(str(STATE.get("display_name") or "SLM chat")))
+                    .replace("__SUBJECT__", escape(str(STATE.get("subject") or "record"))))
             body = html.encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -275,6 +284,10 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8080)
     parser.add_argument("--name", default=None, help="Model name reported by the API.")
+    parser.add_argument("--no-retrieval", action="store_true",
+                        help="Answer without looking up the referenced record.")
+    parser.add_argument("--index-rows", type=int, default=0,
+                        help="Rows loaded into the record index (0 = all).")
     return parser.parse_args(argv)
 
 
@@ -291,13 +304,28 @@ def main(argv: Optional[List[str]] = None) -> int:
     if not args.name:
         profile_key = read_model_profile(args.models_dir).get("key", "air_quality")
         args.name = profile_key.replace("_", "-") + "-slm"
+    saved_profile = read_model_profile(args.models_dir)
     STATE.update(model=model, tokenizer=tokenizer, config=config, meta=meta,
                  device=device, name=args.name,
+                 display_name=saved_profile.get("display_name"),
+                 subject=saved_profile.get("subject"),
                  questions=load_questions(args.models_dir))
+
+    if not args.no_retrieval:
+        try:
+            from retrieval import build_index
+
+            started = time.time()
+            STATE["index"] = build_index(profile_key=saved_profile.get("key", "auto"),
+                                         max_rows=args.index_rows)
+            print(f"Record index: {len(STATE['index']):,} records in "
+                  f"{time.time() - started:.1f}s (key: {STATE['index'].key_column})")
+        except Exception as exc:
+            print(f"Record lookup unavailable ({exc}); answering without context.")
 
     server = ThreadingHTTPServer((args.host, args.port), Handler)
     url = f"http://{args.host}:{args.port}"
-    print(f"Air Quality SLM chat demo: {url}")
+    print(f"{STATE.get('display_name') or 'SLM'} chat demo: {url}")
     print(f"  model: {meta['weights_path']} on {device.type}")
     print(f"  Ollama-compatible API: POST {url}/api/chat")
     print("  Ctrl-C to stop")

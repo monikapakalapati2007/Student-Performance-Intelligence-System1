@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Student Performance Intelligence System</title>
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">SP</div>
+    <div>
+      <h1>Student Performance Intelligence System</h1>
+      <p>Design Thinking project &middot; gradient-boosted prediction + local language model</p>
+    </div>
+  </div>
+  <div class="chips">
+    <span class="chip" id="chipModel">model: loading</span>
+    <span class="chip" id="chipOllama">ollama: checking</span>
+  </div>
+</header>
+
+<main>
+  <section class="grid two">
+    <form class="card" id="studentForm" autocomplete="off">
+      <h2>Student profile</h2>
+      <p class="muted">Three behaviour inputs &mdash; the only features the model was trained on.</p>
+
+      <label class="field">
+        <span>Weekly self-study hours <b id="hoursOut">15.0</b></span>
+        <input type="range" id="hours" min="0" max="40" step="0.5" value="15" />
+        <input type="number" id="hoursNum" min="0" max="40" step="0.5" value="15" />
+      </label>
+
+      <label class="field">
+        <span>Attendance percentage <b id="attendanceOut">85</b>%</span>
+        <input type="range" id="attendance" min="0" max="100" step="1" value="85" />
+        <input type="number" id="attendanceNum" min="0" max="100" step="1" value="85" />
+      </label>
+
+      <label class="field">
+        <span>Class participation (0&ndash;10) <b id="participationOut">6.5</b></span>
+        <input type="range" id="participation" min="0" max="10" step="0.1" value="6.5" />
+        <input type="number" id="participationNum" min="0" max="10" step="0.1" value="6.5" />
+      </label>
+
+      <div class="row">
+        <button type="submit" class="primary" id="predictBtn">Predict performance</button>
+        <button type="button" class="ghost" id="resetBtn">Reset</button>
+      </div>
+      <p class="note" id="predictError" hidden></p>
+    </form>
+
+    <div class="card result" id="resultCard">
+      <h2>Prediction</h2>
+      <div class="score-row">
+        <div class="score" id="scoreValue">&mdash;</div>
+        <div class="score-meta">
+          <div class="grade-badge" id="gradeBadge">&ndash;</div>
+          <div class="muted" id="gradeConfidence">run a prediction</div>
+        </div>
+      </div>
+      <div class="bar"><div class="bar-fill" id="scoreBar" style="width:0%"></div></div>
+      <p class="range" id="scoreRange"></p>
+      <p id="interpretation" class="interpretation">Enter a student profile and press
+        <strong>Predict performance</strong>. The number comes from the saved
+        HistGradientBoosting model, not from the language model.</p>
+
+      <h3>Grade probabilities</h3>
+      <div class="probs" id="probs"></div>
+
+      <h3>Supporting factors</h3>
+      <ul class="drivers" id="drivers"><li class="muted">Permutation importance loads with the model.</li></ul>
+
+      <h3>Model what-if estimates</h3>
+      <div class="table-wrap"><table id="whatIf">
+        <thead><tr><th>Change (other inputs fixed)</th><th>Predicted score</th><th>Change</th></tr></thead>
+        <tbody><tr><td colspan="3" class="muted">Run a prediction to compute this.</td></tr></tbody>
+      </table></div>
+      <p class="note">What-if values are model estimates, not causal effects or a promise.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-panel="assistant">Ask the assistant</button>
+      <button class="tab" data-panel="modelInfo">Dataset &amp; model</button>
+      <button class="tab" data-panel="limits">Limitations</button>
+      <button class="tab" data-panel="exams">Exams model (secondary)</button>
+    </div>
+
+    <div class="panel active" id="panel-assistant">
+      <div class="chat" id="chat">
+        <div class="bubble assistant">
+          <p>Ask about the data or a student. Numbers come from the trained model; the local
+             language model writes the explanation.</p>
+        </div>
+      </div>
+      <div class="suggestions" id="suggestions">
+        <button type="button" class="pill">What factors influence student performance?</button>
+        <button type="button" class="pill">What is the average student score?</button>
+        <button type="button" class="pill">How can a student improve their academic performance?</button>
+        <button type="button" class="pill">What are the limitations of this prediction system?</button>
+      </div>
+      <form class="ask-row" id="askForm">
+        <input type="text" id="askInput" placeholder="Ask a question about the data or a student..." />
+        <button type="submit" class="primary" id="askBtn">Send</button>
+      </form>
+      <p class="note" id="assistantMode"></p>
+    </div>
+
+    <div class="panel" id="panel-modelInfo">
+      <div class="grid three" id="metricCards"></div>
+      <h3>Feature importance (permutation, held-out test split)</h3>
+      <div id="importanceList" class="importance"></div>
+      <h3>Dataset summary (test split)</h3>
+      <div id="datasetSummary" class="kv"></div>
+      <h3>Why this architecture</h3>
+      <p class="muted">Three informative tabular features over 1M rows: gradient-boosted trees
+        beat ridge, random forest, an MLP and any transformer on the same validation split.
+        Self-attention has no sequence structure to model here, so a language model is used
+        only for explanation, never for prediction.</p>
+    </div>
+
+    <div class="panel" id="panel-limits">
+      <ul class="limits" id="limitsList"></ul>
+    </div>
+
+    <div class="panel" id="panel-exams">
+      <p class="muted">Secondary model trained on the separate 1,000-row
+        &ldquo;Students Performance in Exams&rdquo; dataset (math score). Coarse reference only.</p>
+      <form id="examsForm" class="exams-grid">
+        <label>Gender<select name="gender"><option>female</option><option>male</option></select></label>
+        <label>Race/ethnicity<select name="race/ethnicity">
+          <option>group A</option><option>group B</option><option>group C</option>
+          <option>group D</option><option>group E</option></select></label>
+        <label>Parental education<select name="parental level of education">
+          <option>some high school</option><option>high school</option>
+          <option>some college</option><option>associate's degree</option>
+          <option>bachelor's degree</option><option>master's degree</option></select></label>
+        <label>Lunch<select name="lunch"><option>standard</option><option>free/reduced</option></select></label>
+        <label>Test preparation<select name="test preparation course">
+          <option>completed</option><option>none</option></select></label>
+        <button type="submit" class="primary">Score maths</button>
+      </form>
+      <p id="examsResult" class="interpretation"></p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span>Prediction model: HistGradientBoostingRegressor (joblib) &middot; language layer: Ollama
+    (local) &middot; every metric shown was measured on this machine.</span>
+  <span id="footerModel"></span>
+</footer>
+
+<script src="/app.js"></script>
+</body>
+</html>

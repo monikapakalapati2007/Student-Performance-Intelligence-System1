@@ -1,0 +1,772 @@
+{
+  "primary_dataset": "Student Performance — 1M records",
+  "task": "regression: total_score; classification: grade",
+  "model": {
+    "name": "hist_gradient_boosting",
+    "family": "hist_gradient_boosting",
+    "params": {
+      "enabled": true,
+      "max_iter": 500,
+      "learning_rate": 0.04,
+      "max_leaf_nodes": 15,
+      "min_samples_leaf": 80,
+      "l2_regularization": 2.0,
+      "early_stopping": true,
+      "n_iter_no_change": 20,
+      "validation_fraction": 0.1
+    },
+    "scaled": false,
+    "n_features": 6,
+    "features": [
+      "weekly_self_study_hours",
+      "attendance_percentage",
+      "class_participation",
+      "effort_index",
+      "study_attendance_product",
+      "participation_per_study_hour"
+    ],
+    "n_train_used": 850000,
+    "size_mb": 0.414,
+    "seed": 1337
+  },
+  "validation_metrics_selected": {
+    "mae": 6.117965894436022,
+    "mse": 67.58039129514503,
+    "rmse": 8.220729365156418,
+    "r2": 0.7164996404788129,
+    "n_samples": 150000,
+    "target_mean": 84.27445866666667,
+    "target_std": 15.439511098918414
+  },
+  "test_metrics": {
+    "mae": 6.119040550614796,
+    "mse": 67.34600120959723,
+    "rmse": 8.206460943037335,
+    "r2": 0.717531483911181,
+    "n_samples": 150000,
+    "target_mean": 84.29102333333333,
+    "target_std": 15.44083857457626,
+    "predictions_outside_0_100": 0
+  },
+  "test_confusion_free_checks": {
+    "predictions_equal_actual_rate": 0.10482
+  },
+  "candidates": [
+    {
+      "name": "ridge",
+      "family": "ridge",
+      "params": {
+        "enabled": true,
+        "alpha": 1.0
+      },
+      "scaled": true,
+      "n_train_used": 700000,
+      "fit_seconds": 0.03,
+      "val_metrics": {
+        "mae": 7.043715554111516,
+        "mse": 78.63437690530839,
+        "rmse": 8.867602658289803,
+        "r2": 0.6701280697529644,
+        "n_samples": 150000,
+        "target_mean": 84.27445866666667,
+        "target_std": 15.439511098918414
+      }
+    },
+    {
+      "name": "random_forest",
+      "family": "random_forest",
+      "params": {
+        "enabled": true,
+        "n_estimators": 120,
+        "max_depth": 18,
+        "min_samples_leaf": 20,
+        "max_samples": 300000
+      },
+      "scaled": false,
+      "n_train_used": 300000,
+      "fit_seconds": 18.97,
+      "val_metrics": {
+        "mae": 6.148496992531886,
+        "mse": 68.53160396131568,
+        "rmse": 8.278381723580743,
+        "r2": 0.7125092946451708,
+        "n_samples": 150000,
+        "target_mean": 84.27445866666667,
+        "target_std": 15.439511098918414
+      }
+    },
+    {
+      "name": "hist_gradient_boosting",
+      "family": "hist_gradient_boosting",
+      "params": {
+        "enabled": true,
+        "max_iter": 400,
+        "learning_rate": 0.06,
+        "max_leaf_nodes": 31,
+        "min_samples_leaf": 40,
+        "l2_regularization": 1.0,
+        "early_stopping": true,
+        "n_iter_no_change": 20,
+        "validation_fraction": 0.1
+      },
+      "scaled": false,
+      "n_train_used": 700000,
+      "fit_seconds": 1.91,
+      "val_metrics": {
+        "mae": 6.115845805766021,
+        "mse": 67.58657053553951,
+        "rmse": 8.22110518942189,
+        "r2": 0.7164737185088474,
+        "n_samples": 150000,
+        "target_mean": 84.27445866666667,
+        "target_std": 15.439511098918414
+      }
+    },
+    {
+      "name": "mlp",
+      "family": "mlp",
+      "params": {
+        "enabled": true,
+        "hidden_layer_sizes": [
+          64,
+          32
+        ],
+        "alpha": 0.001,
+        "batch_size": 512,
+        "learning_rate_init": 0.001,
+        "max_iter": 40,
+        "early_stopping": true,
+        "n_iter_no_change": 6,
+        "max_samples": 200000
+      },
+      "scaled": true,
+      "n_train_used": 200000,
+      "fit_seconds": 8.96,
+      "val_metrics": {
+        "mae": 6.1319764483840595,
+        "mse": 67.8042988738977,
+        "rmse": 8.234336577642287,
+        "r2": 0.7155603461382598,
+        "n_samples": 150000,
+        "target_mean": 84.27445866666667,
+        "target_std": 15.439511098918414
+      }
+    },
+    {
+      "name": "hist_gradient_boosting",
+      "family": "hist_gradient_boosting",
+      "params": {
+        "enabled": true,
+        "max_iter": 300,
+        "learning_rate": 0.05,
+        "max_leaf_nodes": 31,
+        "min_samples_leaf": 40,
+        "l2_regularization": 1.0,
+        "early_stopping": true,
+        "n_iter_no_change": 20,
+        "validation_fraction": 0.1
+      },
+      "scaled": false,
+      "n_train_used": 700000,
+      "fit_seconds": 2.34,
+      "val_metrics": {
+        "mae": 6.116361535467586,
+        "mse": 67.59679586079551,
+        "rmse": 8.221727060709052,
+        "r2": 0.7164308231758857,
+        "n_samples": 150000,
+        "target_mean": 84.27445866666667,
+        "target_std": 15.439511098918414
+      }
+    },
+    {
+      "name": "hist_gradient_boosting",
+      "family": "hist_gradient_boosting",
+      "params": {
+        "enabled": true,
+        "max_iter": 300,
+        "learning_rate": 0.08,
+        "max_leaf_nodes": 63,
+        "min_samples_leaf": 20,
+        "l2_regularization": 0.5,
+        "early_stopping": true,
+        "n_iter_no_change": 20,
+        "validation_fraction": 0.1
+      },
+      "scaled": false,
+      "n_train_used": 700000,
+      "fit_seconds": 1.68,
+      "val_metrics": {
+        "mae": 6.117974983891535,
+        "mse": 67.63223026050139,
+        "rmse": 8.22388170273025,
+        "r2": 0.7162821755450639,
+        "n_samples": 150000,
+        "target_mean": 84.27445866666667,
+        "target_std": 15.439511098918414
+      }
+    },
+    {
+      "name": "hist_gradient_boosting",
+      "family": "hist_gradient_boosting",
+      "params": {
+        "enabled": true,
+        "max_iter": 500,
+        "learning_rate": 0.04,
+        "max_leaf_nodes": 15,
+        "min_samples_leaf": 80,
+        "l2_regularization": 2.0,
+        "early_stopping": true,
+        "n_iter_no_change": 20,
+        "validation_fraction": 0.1
+      },
+      "scaled": false,
+      "n_train_used": 700000,
+      "fit_seconds": 2.37,
+      "val_metrics": {
+        "mae": 6.117965894436022,
+        "mse": 67.58039129514503,
+        "rmse": 8.220729365156418,
+        "r2": 0.7164996404788129,
+        "n_samples": 150000,
+        "target_mean": 84.27445866666667,
+        "target_std": 15.439511098918414
+      }
+    }
+  ],
+  "hyperparameter_search": [
+    {
+      "trial": 1,
+      "params": {
+        "enabled": true,
+        "max_iter": 300,
+        "learning_rate": 0.05,
+        "max_leaf_nodes": 31,
+        "min_samples_leaf": 40,
+        "l2_regularization": 1.0,
+        "early_stopping": true,
+        "n_iter_no_change": 20,
+        "validation_fraction": 0.1
+      },
+      "val_metrics": {
+        "mae": 6.116361535467586,
+        "mse": 67.59679586079551,
+        "rmse": 8.221727060709052,
+        "r2": 0.7164308231758857,
+        "n_samples": 150000,
+        "target_mean": 84.27445866666667,
+        "target_std": 15.439511098918414
+      },
+      "fit_seconds": 2.55
+    },
+    {
+      "trial": 2,
+      "params": {
+        "enabled": true,
+        "max_iter": 300,
+        "learning_rate": 0.08,
+        "max_leaf_nodes": 63,
+        "min_samples_leaf": 20,
+        "l2_regularization": 0.5,
+        "early_stopping": true,
+        "n_iter_no_change": 20,
+        "validation_fraction": 0.1
+      },
+      "val_metrics": {
+        "mae": 6.117974983891535,
+        "mse": 67.63223026050139,
+        "rmse": 8.22388170273025,
+        "r2": 0.7162821755450639,
+        "n_samples": 150000,
+        "target_mean": 84.27445866666667,
+        "target_std": 15.439511098918414
+      },
+      "fit_seconds": 1.83
+    },
+    {
+      "trial": 3,
+      "params": {
+        "enabled": true,
+        "max_iter": 500,
+        "learning_rate": 0.04,
+        "max_leaf_nodes": 15,
+        "min_samples_leaf": 80,
+        "l2_regularization": 2.0,
+        "early_stopping": true,
+        "n_iter_no_change": 20,
+        "validation_fraction": 0.1
+      },
+      "val_metrics": {
+        "mae": 6.117965894436022,
+        "mse": 67.58039129514503,
+        "rmse": 8.220729365156418,
+        "r2": 0.7164996404788129,
+        "n_samples": 150000,
+        "target_mean": 84.27445866666667,
+        "target_std": 15.439511098918414
+      },
+      "fit_seconds": 2.59
+    }
+  ],
+  "feature_importance_permutation_rmse": {
+    "weekly_self_study_hours": 11.735611779626645,
+    "attendance_percentage": -0.0002720574449425565,
+    "class_participation": 0.00018209884045283786,
+    "effort_index": 0.003914230081629573,
+    "study_attendance_product": 0.005842096810158755,
+    "participation_per_study_hour": 0.00656565146769772
+  },
+  "grade_classifier": {
+    "selected": "hist_gradient_boosting",
+    "candidates": [
+      {
+        "name": "hist_gradient_boosting",
+        "params": {
+          "max_iter": 200,
+          "learning_rate": 0.08,
+          "max_leaf_nodes": 31,
+          "min_samples_leaf": 40,
+          "early_stopping": true,
+          "n_iter_no_change": 15
+        },
+        "scaled": false,
+        "features": [
+          "weekly_self_study_hours",
+          "attendance_percentage",
+          "class_participation",
+          "effort_index",
+          "study_attendance_product",
+          "participation_per_study_hour"
+        ],
+        "labels": [
+          "F",
+          "D",
+          "C",
+          "B",
+          "A"
+        ],
+        "fit_seconds": 8.17,
+        "val_metrics": {
+          "accuracy": 0.6951866666666666,
+          "precision_macro": 0.4782269874410804,
+          "recall_macro": 0.44102155041428154,
+          "f1_macro": 0.45339458347447736,
+          "f1_weighted": 0.6874048322340003,
+          "n_samples": 150000,
+          "labels": [
+            "0",
+            "1",
+            "2",
+            "3",
+            "4"
+          ],
+          "confusion_matrix": [
+            [
+              5,
+              607,
+              309,
+              10,
+              0
+            ],
+            [
+              16,
+              2368,
+              3622,
+              721,
+              23
+            ],
+            [
+              22,
+              1607,
+              9751,
+              8595,
+              1322
+            ],
+            [
+              44,
+              157,
+              5188,
+              19843,
+              13494
+            ],
+            [
+              18,
+              29,
+              519,
+              9419,
+              72311
+            ]
+          ],
+          "roc_auc_ovr_macro": 0.902311633086096
+        },
+        "n_train_used": 700000
+      },
+      {
+        "name": "random_forest",
+        "params": {
+          "n_estimators": 80,
+          "max_depth": 16,
+          "min_samples_leaf": 20,
+          "class_weight": "balanced_subsample",
+          "max_samples": 300000
+        },
+        "scaled": false,
+        "features": [
+          "weekly_self_study_hours",
+          "attendance_percentage",
+          "class_participation",
+          "effort_index",
+          "study_attendance_product",
+          "participation_per_study_hour"
+        ],
+        "labels": [
+          "F",
+          "D",
+          "C",
+          "B",
+          "A"
+        ],
+        "fit_seconds": 7.32,
+        "val_metrics": {
+          "accuracy": 0.6446866666666666,
+          "precision_macro": 0.44554470284975495,
+          "recall_macro": 0.5380280920519817,
+          "f1_macro": 0.4646874989724557,
+          "f1_weighted": 0.6617979113495226,
+          "n_samples": 150000,
+          "labels": [
+            "0",
+            "1",
+            "2",
+            "3",
+            "4"
+          ],
+          "confusion_matrix": [
+            [
+              488,
+              379,
+              61,
+              3,
+              0
+            ],
+            [
+              1884,
+              2788,
+              1779,
+              296,
+              3
+            ],
+            [
+              1255,
+              4575,
+              9442,
+              5621,
+              404
+            ],
+            [
+              127,
+              1407,
+              9105,
+              21144,
+              6943
+            ],
+            [
+              4,
+              79,
+              1663,
+              17709,
+              62841
+            ]
+          ],
+          "roc_auc_ovr_macro": 0.8836935527308787
+        },
+        "n_train_used": 300000
+      }
+    ],
+    "test_metrics": {
+      "accuracy": 0.6956,
+      "precision_macro": 0.5059021580912019,
+      "recall_macro": 0.4404965599791525,
+      "f1_macro": 0.45357180420295784,
+      "f1_weighted": 0.686938868105858,
+      "n_samples": 150000,
+      "labels": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "confusion_matrix": [
+        [
+          7,
+          611,
+          303,
+          9,
+          0
+        ],
+        [
+          19,
+          2381,
+          3629,
+          702,
+          19
+        ],
+        [
+          11,
+          1632,
+          9585,
+          8778,
+          1291
+        ],
+        [
+          0,
+          154,
+          4997,
+          19734,
+          13841
+        ],
+        [
+          0,
+          38,
+          513,
+          9113,
+          72633
+        ]
+      ],
+      "roc_auc_ovr_macro": 0.9033822088304209,
+      "label_names": [
+        "F",
+        "D",
+        "C",
+        "B",
+        "A"
+      ]
+    },
+    "labels": [
+      "F",
+      "D",
+      "C",
+      "B",
+      "A"
+    ],
+    "n_train_used": 850000
+  },
+  "exams_model": {
+    "enabled": true,
+    "selected": "linear_regression",
+    "candidates": {
+      "linear_regression": {
+        "mae": 11.449610493077493,
+        "mse": 215.02347118350525,
+        "rmse": 14.66367863748743,
+        "r2": 0.2884704495421605,
+        "n_samples": 150,
+        "target_mean": 64.88,
+        "target_std": 17.383869918212493
+      },
+      "hist_gradient_boosting": {
+        "mae": 11.93493032830922,
+        "mse": 231.50475653363586,
+        "rmse": 15.215280363293864,
+        "r2": 0.23393258215680046,
+        "n_samples": 150,
+        "target_mean": 64.88,
+        "target_std": 17.383869918212493
+      }
+    },
+    "test_metrics": {
+      "mae": 10.9559065361293,
+      "mse": 173.84201218992578,
+      "rmse": 13.184916085812825,
+      "r2": 0.11042863900993183,
+      "n_samples": 150,
+      "target_mean": 64.86666666666666,
+      "target_std": 13.979349849768488,
+      "category_accuracy": 0.5,
+      "category_labels": [
+        "needs improvement (<60)",
+        "satisfactory (60-79)",
+        "good (>=80)"
+      ]
+    },
+    "preprocessing": {
+      "source_files": {
+        "test": [
+          "exams_test.csv",
+          "exams_test.parquet"
+        ],
+        "train": [
+          "exams_train.csv",
+          "exams_train.parquet"
+        ],
+        "validation": [
+          "exams_validation.csv",
+          "exams_validation.parquet"
+        ]
+      },
+      "splits": {
+        "test": {
+          "rows": 150
+        },
+        "train": {
+          "rows": 700
+        },
+        "validation": {
+          "rows": 150
+        }
+      },
+      "train_test_feature_row_overlap": 89,
+      "overlap_note": "identical feature rows across splits are expected on a 600-cell categorical grid; they carry no target information, so no re-split"
+    },
+    "features": [
+      "gender",
+      "race/ethnicity",
+      "parental level of education",
+      "lunch",
+      "test preparation course"
+    ],
+    "n_train_used": 850
+  },
+  "samples": {
+    "test_samples": [
+      {
+        "student_id": 471041,
+        "input": {
+          "weekly_self_study_hours": 14.5,
+          "attendance_percentage": 99.3,
+          "class_participation": 4.6
+        },
+        "actual_total_score": 85.8,
+        "predicted_total_score": 85.99,
+        "actual_grade": "A",
+        "predicted_grade": "A",
+        "grade_confidence": 0.546
+      },
+      {
+        "student_id": 206359,
+        "input": {
+          "weekly_self_study_hours": 31.5,
+          "attendance_percentage": 80.8,
+          "class_participation": 3.8
+        },
+        "actual_total_score": 100.0,
+        "predicted_total_score": 99.93,
+        "actual_grade": "A",
+        "predicted_grade": "A",
+        "grade_confidence": 1.0
+      },
+      {
+        "student_id": 952263,
+        "input": {
+          "weekly_self_study_hours": 8.8,
+          "attendance_percentage": 66.8,
+          "class_participation": 4.5
+        },
+        "actual_total_score": 86.2,
+        "predicted_total_score": 72.25,
+        "actual_grade": "A",
+        "predicted_grade": "B",
+        "grade_confidence": 0.485
+      },
+      {
+        "student_id": 168188,
+        "input": {
+          "weekly_self_study_hours": 22.0,
+          "attendance_percentage": 91.4,
+          "class_participation": 6.0
+        },
+        "actual_total_score": 100.0,
+        "predicted_total_score": 98.11,
+        "actual_grade": "A",
+        "predicted_grade": "A",
+        "grade_confidence": 0.956
+      },
+      {
+        "student_id": 192992,
+        "input": {
+          "weekly_self_study_hours": 14.9,
+          "attendance_percentage": 71.1,
+          "class_participation": 8.8
+        },
+        "actual_total_score": 89.8,
+        "predicted_total_score": 86.79,
+        "actual_grade": "A",
+        "predicted_grade": "A",
+        "grade_confidence": 0.596
+      }
+    ],
+    "illustrative_inputs": [
+      {
+        "weekly_self_study_hours": 8.0,
+        "attendance_percentage": 80.0,
+        "class_participation": 5.0,
+        "predicted_total_score": 70.49,
+        "predicted_grade": "C",
+        "grade_confidence": 0.446
+      },
+      {
+        "weekly_self_study_hours": 18.0,
+        "attendance_percentage": 92.0,
+        "class_participation": 8.0,
+        "predicted_total_score": 93.14,
+        "predicted_grade": "A",
+        "grade_confidence": 0.853
+      },
+      {
+        "weekly_self_study_hours": 30.0,
+        "attendance_percentage": 70.0,
+        "class_participation": 3.0,
+        "predicted_total_score": 99.93,
+        "predicted_grade": "A",
+        "grade_confidence": 1.0
+      }
+    ],
+    "exams_sample": {
+      "input": {
+        "gender": "male",
+        "race/ethnicity": "group C",
+        "parental level of education": "master's degree",
+        "lunch": "free/reduced",
+        "test preparation course": "none"
+      },
+      "predicted_math_score": 61.07,
+      "actual_math_score": 61.0
+    }
+  },
+  "splits": {
+    "test": 150000,
+    "train": 700000,
+    "validation": 150000
+  },
+  "hardware": {
+    "os": "Windows 11 (AMD64)",
+    "python_version": "3.13.14",
+    "python_executable": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\.venv\\Scripts\\python.exe",
+    "torch_version": "2.15.0+cpu",
+    "cpu_name": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel",
+    "cpu_count": 12,
+    "total_ram_gb": 15.68,
+    "cuda_available": false,
+    "cuda_version": null,
+    "cuda_device_count": 0,
+    "gpu_names": [
+      "NVIDIA GeForce RTX 3050 Laptop GPU, 4096 MiB"
+    ],
+    "gpu_total_vram_gb": 4.0,
+    "gpu_free_vram_gb": null,
+    "mps_available": false,
+    "selected_device": "cpu",
+    "precision": "float32",
+    "threads": 8,
+    "gpu_detected_but_unusable": true,
+    "package_versions": {
+      "numpy": "2.5.5",
+      "pandas": "3.1.1",
+      "sklearn": "1.9.1",
+      "joblib": "1.6.0",
+      "matplotlib": "3.11.2",
+      "pyarrow": "26.0.1"
+    }
+  }
+}

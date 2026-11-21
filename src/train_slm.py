@@ -767,9 +767,13 @@ def write_qa_sets(cleaned: Dict[str, pd.DataFrame], spec, output_dir: str) -> Di
         records: List[Dict[str, str]] = []
         # QA probes are for evaluation/inference only, so a bounded sample is
         # enough and keeps the artifact small on a million-row dataset.
+        key_column = spec.identifier[0] if spec.identifier else ""
         for _, row in df.head(2000).iterrows():
+            context = prep.record_context(row, spec)
+            key = str(row[key_column]).strip() if key_column else ""
             for question, answer in prep.qa_pairs_for_row(row, spec, max_pairs=2):
-                records.append({"question": question, "answer": answer})
+                records.append({"question": question, "answer": answer,
+                                "context": context, "key": key})
         out[name] = records
         prep.write_jsonl(records, os.path.join(output_dir, f"{name}_qa.jsonl"))
     return out

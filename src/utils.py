@@ -150,6 +150,27 @@ def get_hardware_info() -> Dict[str, Any]:
     except Exception as exc:  # torch missing -> pure-python detection only
         info["torch_version"] = f"unavailable ({exc.__class__.__name__})"
         info["threads"] = os.cpu_count()
+
+    # A GPU can exist and still be unusable by the installed PyTorch wheel (CPU build).
+    if not info["cuda_available"] and not info["gpu_names"]:
+        try:
+            out = subprocess.run(
+                ["nvidia-smi", "--query-gpu=name,memory.total", "--format=csv,noheader"],
+                capture_output=True, text=True, timeout=5,
+            )
+            detected = [line.strip() for line in out.stdout.splitlines() if line.strip()]
+            if detected:
+                info["gpu_names"] = detected
+                info["gpu_detected_but_unusable"] = True
+                try:
+                    import re
+
+                    mib = sum(float(re.search(r"([\d.]+)\s*MiB", d).group(1)) for d in detected)
+                    info["gpu_total_vram_gb"] = round(mib / 1024, 2)
+                except Exception:
+                    pass
+        except Exception:
+            pass
     return info
 
 
@@ -262,3 +283,138 @@ def human_int(value: Optional[float]) -> str:
     if value is None:
         return "n/a"
     return f"{int(value):,}"
+
+
+# --------------------------------------------------------------------------- #
+# Tabular pipeline helpers (student performance model)
+# --------------------------------------------------------------------------- #
+DATASET_ROOT_CANDIDATES = ("data", "hugging face", ".")
+
+MILLION_SIGNATURE = {"weekly_self_study_hours", "attendance_percentage",
+                     "class_participation", "total_score", "grade"}
+EXAMS_SIGNATURE = {"gender", "race/ethnicity", "parental level of education",
+                   "lunch", "test preparation course",
+                   "math score", "reading score", "writing score"}
+
+_SPLIT_WORDS = (("valid", "validation"), ("test", "test"), ("train", "train"))
+
+
+def project_root() -> str:
+    """Absolute path of the project root (parent of src/)."""
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def _split_from_name(path: str) -> str:
+    name = os.path.basename(path).lower()
+    for word, split in _SPLIT_WORDS:
+        if word in name:
+            return split
+    return "unsplit"
+
+
+def discover_datasets(root: Optional[str] = None) -> Dict[str, list]:
+    """Find every table on disk and group it by dataset family and split.
+
+    Returns ``{family: {split: [paths]}}``.  Files are only *read* here; nothing
+    is moved, renamed or rewritten, so the original downloads stay untouched.
+    """
+    import pandas as pd
+
+    root = root or project_root()
+    skip_dirs = {".git", ".venv", "venv", "node_modules", "__pycache__", "processed"}
+    found: Dict[str, Dict[str, list]] = {"million": {}, "exams": {}}
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in skip_dirs and not d.startswith(".")]
+        for fname in filenames:
+            lower = fname.lower()
+            if not lower.endswith((".parquet", ".csv")):
+                continue
+            path = os.path.join(dirpath, fname)
+            try:
+                if lower.endswith(".parquet"):
+                    import pyarrow.parquet as pq
+
+                    columns = set(pq.read_schema(path).names)
+                else:
+                    columns = set(pd.read_csv(path, nrows=0).columns)
+            except Exception:
+                continue
+            if MILLION_SIGNATURE <= columns:
+                family = "million"
+            elif EXAMS_SIGNATURE <= columns:
+                family = "exams"
+            else:
+                continue
+            split = _split_from_name(path)
+            found[family].setdefault(split, []).append(path)
+    for family in found:
+        for split in found[family]:
+            found[family][split].sort()
+    return found
+
+
+def read_tables(paths: list, **kwargs):
+    """Concatenate parquet/csv tables without modifying the source files."""
+    import pandas as pd
+
+    frames = []
+    for path in paths:
+        if path.lower().endswith(".parquet"):
+            frames.append(pd.read_parquet(path, **kwargs))
+        else:
+            frames.append(pd.read_csv(path, **kwargs))
+    if not frames:
+        return pd.DataFrame()
+    return pd.concat(frames, ignore_index=True)
+
+
+def regression_metrics(y_true, y_pred) -> Dict[str, float]:
+    """MAE / MSE / RMSE / R2 plus the target's spread for context."""
+    import numpy as np
+    from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
+    y_true = np.asarray(y_true, dtype=float)
+    y_pred = np.asarray(y_pred, dtype=float)
+    return {
+        "mae": float(mean_absolute_error(y_true, y_pred)),
+        "mse": float(mean_squared_error(y_true, y_pred)),
+        "rmse": float(np.sqrt(mean_squared_error(y_true, y_pred))),
+        "r2": float(r2_score(y_true, y_pred)),
+        "n_samples": int(y_true.size),
+        "target_mean": float(y_true.mean()),
+        "target_std": float(y_true.std()),
+    }
+
+
+def classification_metrics(y_true, y_pred, y_proba=None, labels=None) -> Dict[str, Any]:
+    """Accuracy / precision / recall / F1 / confusion matrix / (optional) ROC-AUC."""
+    import numpy as np
+    from sklearn.metrics import (accuracy_score, confusion_matrix, f1_score,
+                                 precision_score, recall_score, roc_auc_score)
+
+    y_true = np.asarray(y_true)
+    y_pred = np.asarray(y_pred)
+    out: Dict[str, Any] = {
+        "accuracy": float(accuracy_score(y_true, y_pred)),
+        "precision_macro": float(precision_score(y_true, y_pred, average="macro", zero_division=0)),
+        "recall_macro": float(recall_score(y_true, y_pred, average="macro", zero_division=0)),
+        "f1_macro": float(f1_score(y_true, y_pred, average="macro", zero_division=0)),
+        "f1_weighted": float(f1_score(y_true, y_pred, average="weighted", zero_division=0)),
+        "n_samples": int(y_true.size),
+    }
+    label_list = list(labels) if labels is not None else sorted(set(y_true.tolist()))
+    cm = confusion_matrix(y_true, y_pred, labels=label_list)
+    out["labels"] = [str(x) for x in label_list]
+    out["confusion_matrix"] = cm.tolist()
+    if y_proba is not None:
+        try:
+            proba = np.asarray(y_proba, dtype=float)
+            if proba.shape[0] == y_true.size and len(label_list) > 2:
+                out["roc_auc_ovr_macro"] = float(
+                    roc_auc_score(y_true, proba, multi_class="ovr", average="macro",
+                                  labels=label_list))
+            elif proba.shape[1] == 2 and len(label_list) == 2:
+                out["roc_auc"] = float(roc_auc_score(y_true, proba[:, 1]))
+        except ValueError as exc:  # e.g. a class absent from y_true
+            out["roc_auc_error"] = str(exc)
+    return out

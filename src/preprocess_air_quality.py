@@ -493,8 +493,25 @@ def qa_pairs_for_row(row: pd.Series, spec: FieldSpec, max_pairs: int = 4) -> Lis
     return candidates[:max_pairs]
 
 
-def qa_document(question: str, answer: str) -> str:
-    return f"{QA_START}\n{Q_PREFIX} {question}\n{A_PREFIX} {answer}\n{DOC_END}"
+def qa_document(question: str, answer: str, context: str = "") -> str:
+    """One QA document, optionally grounded on the record card it refers to.
+
+    Grounded examples teach the model to READ a value out of the context instead of
+    recalling it from parameters, which is what makes record-specific questions
+    answerable at this model size.
+    """
+    body = f"{QA_START}\n"
+    if context:
+        body += f"{context}\n"
+    body += f"{Q_PREFIX} {question}\n{A_PREFIX} {answer}\n{DOC_END}"
+    return body
+
+
+def record_context(row: pd.Series, spec: FieldSpec) -> str:
+    """The row card without its end marker, for use as prompt context."""
+    card = row_card(row, spec)
+    suffix = f" {DOC_END}"
+    return card[:-len(suffix)] if card.endswith(suffix) else card
 
 
 def knowledge_documents(columns: Sequence[str], spec: FieldSpec) -> List[str]:
@@ -561,6 +578,7 @@ def build_documents(
     max_qa_per_row: int = 4,
     train_rows: int = 0,
 ) -> List[str]:
+    """Turn a table into text documents (record cards + grounded QA pairs)."""
     """Turn a table into a list of text documents."""
     docs: List[str] = []
     if include_knowledge:
@@ -568,8 +586,9 @@ def build_documents(
         docs.extend(knowledge_documents(list(df.columns), spec))
     for _, row in df.iterrows():
         docs.append(row_card(row, spec))
+        context = record_context(row, spec)
         for question, answer in qa_pairs_for_row(row, spec, max_qa_per_row):
-            docs.append(qa_document(question, answer))
+            docs.append(qa_document(question, answer, context=context))
     return docs
 
 

@@ -1,0 +1,31 @@
+{
+  "million_test": {
+    "model_name": "hist_gradient_boosting",
+    "model_family": "hist_gradient_boosting",
+    "test_metrics": {
+      "mae": 6.119040550614796,
+      "mse": 67.34600120959723,
+      "rmse": 8.206460943037335,
+      "r2": 0.717531483911181,
+      "n_samples": 150000,
+      "target_mean": 84.29102333333333,
+      "target_std": 15.44083857457626,
+      "predictions_outside_0_100": 0
+    },
+    "n_features": 6,
+    "features": [
+      "weekly_self_study_hours",
+      "attendance_percentage",
+      "class_participation",
+      "effort_index",
+      "study_attendance_product",
+      "participation_per_study_hour"
+    ],
+    "target": "total_score",
+    "evaluated_samples": 150000,
+    "plots": [
+      "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\results\\visualizations\\actual_vs_predicted.png",
+      "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\results\\visualizations\\residuals.png"
+    ]
+  }
+}

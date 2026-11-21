@@ -1,0 +1,46 @@
+{
+  "name": "hist_gradient_boosting",
+  "family": "hist_gradient_boosting",
+  "scaled": false,
+  "features": [
+    "weekly_self_study_hours",
+    "attendance_percentage",
+    "class_participation",
+    "effort_index",
+    "study_attendance_product",
+    "participation_per_study_hour"
+  ],
+  "target": "total_score",
+  "params": {
+    "enabled": true,
+    "max_iter": 500,
+    "learning_rate": 0.04,
+    "max_leaf_nodes": 15,
+    "min_samples_leaf": 80,
+    "l2_regularization": 2.0,
+    "early_stopping": true,
+    "n_iter_no_change": 20,
+    "validation_fraction": 0.1
+  },
+  "val_metrics": {
+    "mae": 6.117965894436022,
+    "mse": 67.58039129514503,
+    "rmse": 8.220729365156418,
+    "r2": 0.7164996404788129,
+    "n_samples": 150000,
+    "target_mean": 84.27445866666667,
+    "target_std": 15.439511098918414
+  },
+  "test_metrics": {
+    "mae": 6.119040550614796,
+    "mse": 67.34600120959723,
+    "rmse": 8.206460943037335,
+    "r2": 0.717531483911181,
+    "n_samples": 150000,
+    "target_mean": 84.29102333333333,
+    "target_std": 15.44083857457626,
+    "predictions_outside_0_100": 0
+  },
+  "n_train_used": 850000,
+  "seed": 1337
+}

@@ -1,0 +1,413 @@
+{
+  "discovered_files": {
+    "million": {
+      "test": [
+        "hugging face\\million_test.parquet"
+      ],
+      "train": [
+        "hugging face\\million_train_.parquet"
+      ],
+      "validation": [
+        "hugging face\\million_validation.parquet"
+      ]
+    },
+    "exams": {
+      "test": [
+        "data\\splits\\exams_test.csv",
+        "hugging face\\exams_test.parquet"
+      ],
+      "train": [
+        "data\\splits\\exams_train.csv",
+        "hugging face\\exams_train.parquet"
+      ],
+      "validation": [
+        "data\\splits\\exams_validation.csv",
+        "hugging face\\exams_validation.parquet"
+      ]
+    }
+  },
+  "environment": {
+    "os": "Windows 11 (AMD64)",
+    "python_version": "3.13.14",
+    "python_executable": "C:\\Users\\gnaya\\OneDrive\\Desktop\\design thinking\\.venv\\Scripts\\python.exe",
+    "torch_version": "2.15.0+cpu",
+    "cpu_name": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel",
+    "cpu_count": 12,
+    "total_ram_gb": 15.68,
+    "cuda_available": false,
+    "cuda_version": null,
+    "cuda_device_count": 0,
+    "gpu_names": [
+      "NVIDIA GeForce RTX 3050 Laptop GPU, 4096 MiB"
+    ],
+    "gpu_total_vram_gb": 4.0,
+    "gpu_free_vram_gb": null,
+    "mps_available": false,
+    "selected_device": "cpu",
+    "precision": "float32",
+    "threads": 8,
+    "gpu_detected_but_unusable": true,
+    "package_versions": {
+      "numpy": "2.5.5",
+      "pandas": "3.1.1",
+      "sklearn": "1.9.1",
+      "joblib": "1.6.0",
+      "matplotlib": "3.11.2",
+      "pyarrow": "26.0.1"
+    },
+    "torch_cuda_build": null,
+    "torch_note": "torch CPU build; the installed RTX GPU is not usable by this PyTorch wheel"
+  },
+  "million": {
+    "family": "million",
+    "splits": {
+      "test": {
+        "rows": 150000,
+        "columns": [
+          "student_id",
+          "weekly_self_study_hours",
+          "attendance_percentage",
+          "class_participation",
+          "total_score",
+          "grade"
+        ],
+        "missing": {
+          "student_id": 0,
+          "weekly_self_study_hours": 0,
+          "attendance_percentage": 0,
+          "class_participation": 0,
+          "total_score": 0,
+          "grade": 0
+        },
+        "duplicate_rows": 0,
+        "unique_student_ids": 150000
+      },
+      "train": {
+        "rows": 700000,
+        "columns": [
+          "student_id",
+          "weekly_self_study_hours",
+          "attendance_percentage",
+          "class_participation",
+          "total_score",
+          "grade"
+        ],
+        "missing": {
+          "student_id": 0,
+          "weekly_self_study_hours": 0,
+          "attendance_percentage": 0,
+          "class_participation": 0,
+          "total_score": 0,
+          "grade": 0
+        },
+        "duplicate_rows": 0,
+        "unique_student_ids": 700000
+      },
+      "validation": {
+        "rows": 150000,
+        "columns": [
+          "student_id",
+          "weekly_self_study_hours",
+          "attendance_percentage",
+          "class_participation",
+          "total_score",
+          "grade"
+        ],
+        "missing": {
+          "student_id": 0,
+          "weekly_self_study_hours": 0,
+          "attendance_percentage": 0,
+          "class_participation": 0,
+          "total_score": 0,
+          "grade": 0
+        },
+        "duplicate_rows": 0,
+        "unique_student_ids": 150000
+      }
+    },
+    "rows_total": 1000000,
+    "dtypes": {
+      "student_id": "int64",
+      "weekly_self_study_hours": "float64",
+      "attendance_percentage": "float64",
+      "class_participation": "float64",
+      "total_score": "float64",
+      "grade": "str"
+    },
+    "numeric_summary": {
+      "weekly_self_study_hours": {
+        "min": 0.0,
+        "q1": 10.3,
+        "median": 15.0,
+        "q3": 19.7,
+        "max": 40.0,
+        "mean": 15.0291269,
+        "std": 6.8994310211672385,
+        "iqr_3x_low": -17.899999999999995,
+        "iqr_3x_high": 47.89999999999999,
+        "n_outside_3iqr": 0,
+        "n_zero": 16492
+      },
+      "attendance_percentage": {
+        "min": 50.0,
+        "q1": 78.3,
+        "median": 85.0,
+        "q3": 91.8,
+        "max": 100.0,
+        "mean": 84.711046,
+        "std": 9.424143384964095,
+        "iqr_3x_low": 37.8,
+        "iqr_3x_high": 132.3,
+        "n_outside_3iqr": 0,
+        "n_zero": 0
+      },
+      "class_participation": {
+        "min": 0.0,
+        "q1": 4.7,
+        "median": 6.0,
+        "q3": 7.3,
+        "max": 10.0,
+        "mean": 5.9852026,
+        "std": 1.956420508105158,
+        "iqr_3x_low": -3.0999999999999988,
+        "iqr_3x_high": 15.099999999999998,
+        "n_outside_3iqr": 0,
+        "n_zero": 1420
+      },
+      "total_score": {
+        "min": 9.4,
+        "q1": 73.9,
+        "median": 87.5,
+        "q3": 100.0,
+        "max": 100.0,
+        "mean": 84.2838453,
+        "std": 15.432968775714967,
+        "iqr_3x_low": -4.399999999999977,
+        "iqr_3x_high": 178.29999999999998,
+        "n_outside_3iqr": 0,
+        "n_zero": 0
+      }
+    },
+    "target": "total_score",
+    "grade_counts": {
+      "A": 548644,
+      "B": 258174,
+      "C": 141980,
+      "D": 44998,
+      "F": 6204
+    },
+    "grade_vs_target": {
+      "A": {
+        "min": 85.0,
+        "max": 100.0,
+        "count": 548644
+      },
+      "B": {
+        "min": 70.0,
+        "max": 85.0,
+        "count": 258174
+      },
+      "C": {
+        "min": 55.0,
+        "max": 70.0,
+        "count": 141980
+      },
+      "D": {
+        "min": 40.0,
+        "max": 55.0,
+        "count": 44998
+      },
+      "F": {
+        "min": 9.4,
+        "max": 40.0,
+        "count": 6204
+      }
+    },
+    "grade_is_deterministic_function_of_target": false,
+    "grade_mismatch_rows": 2095,
+    "grade_agreement_rate": 0.997905,
+    "grade_mismatch_at_cutoffs_only": true,
+    "target_at_ceiling_rows": 268121,
+    "correlation_with_target": {
+      "weekly_self_study_hours": 0.8122414301053568,
+      "attendance_percentage": -0.0010138159883893098,
+      "class_participation": 0.0006835440548679945
+    },
+    "student_id_correlation_with_target": -0.0004923919429210104,
+    "duplicate_rows_across_splits": 0,
+    "train_test_student_id_overlap": 0,
+    "train_validation_student_id_overlap": 0
+  },
+  "exams": {
+    "family": "exams",
+    "splits": {
+      "test": {
+        "rows": 300,
+        "columns": [
+          "gender",
+          "race/ethnicity",
+          "parental level of education",
+          "lunch",
+          "test preparation course",
+          "math score",
+          "reading score",
+          "writing score"
+        ],
+        "missing": {
+          "gender": 0,
+          "race/ethnicity": 0,
+          "parental level of education": 0,
+          "lunch": 0,
+          "test preparation course": 0,
+          "math score": 0,
+          "reading score": 0,
+          "writing score": 0
+        },
+        "duplicate_rows": 150
+      },
+      "train": {
+        "rows": 1400,
+        "columns": [
+          "gender",
+          "race/ethnicity",
+          "parental level of education",
+          "lunch",
+          "test preparation course",
+          "math score",
+          "reading score",
+          "writing score"
+        ],
+        "missing": {
+          "gender": 0,
+          "race/ethnicity": 0,
+          "parental level of education": 0,
+          "lunch": 0,
+          "test preparation course": 0,
+          "math score": 0,
+          "reading score": 0,
+          "writing score": 0
+        },
+        "duplicate_rows": 700
+      },
+      "validation": {
+        "rows": 300,
+        "columns": [
+          "gender",
+          "race/ethnicity",
+          "parental level of education",
+          "lunch",
+          "test preparation course",
+          "math score",
+          "reading score",
+          "writing score"
+        ],
+        "missing": {
+          "gender": 0,
+          "race/ethnicity": 0,
+          "parental level of education": 0,
+          "lunch": 0,
+          "test preparation course": 0,
+          "math score": 0,
+          "reading score": 0,
+          "writing score": 0
+        },
+        "duplicate_rows": 150
+      }
+    },
+    "rows_total": 2000,
+    "dtypes": {
+      "gender": "str",
+      "race/ethnicity": "str",
+      "parental level of education": "str",
+      "lunch": "str",
+      "test preparation course": "str",
+      "math score": "int64",
+      "reading score": "int64",
+      "writing score": "int64"
+    },
+    "categorical_levels": {
+      "gender": {
+        "female": 1036,
+        "male": 964
+      },
+      "race/ethnicity": {
+        "group C": 638,
+        "group D": 524,
+        "group B": 380,
+        "group E": 280,
+        "group A": 178
+      },
+      "parental level of education": {
+        "some college": 452,
+        "associate's degree": 444,
+        "high school": 392,
+        "some high school": 358,
+        "bachelor's degree": 236,
+        "master's degree": 118
+      },
+      "lunch": {
+        "standard": 1290,
+        "free/reduced": 710
+      },
+      "test preparation course": {
+        "none": 1284,
+        "completed": 716
+      }
+    },
+    "numeric_summary": {
+      "math score": {
+        "min": 0.0,
+        "q1": 57.0,
+        "median": 66.0,
+        "q3": 77.0,
+        "max": 100.0,
+        "mean": 66.089,
+        "std": 15.159286955213139,
+        "iqr_3x_low": -3.0,
+        "iqr_3x_high": 137.0,
+        "n_outside_3iqr": 0,
+        "n_zero": 2
+      },
+      "reading score": {
+        "min": 17.0,
+        "q1": 59.0,
+        "median": 70.0,
+        "q3": 79.0,
+        "max": 100.0,
+        "mean": 69.169,
+        "std": 14.596539606504075,
+        "iqr_3x_low": -1.0,
+        "iqr_3x_high": 139.0,
+        "n_outside_3iqr": 0,
+        "n_zero": 0
+      },
+      "writing score": {
+        "min": 10.0,
+        "q1": 57.75,
+        "median": 69.0,
+        "q3": 79.0,
+        "max": 100.0,
+        "mean": 68.054,
+        "std": 15.19185572075117,
+        "iqr_3x_low": -6.0,
+        "iqr_3x_high": 142.75,
+        "n_outside_3iqr": 0,
+        "n_zero": 0
+      }
+    },
+    "correlation": {
+      "math score": 1.0,
+      "reading score": 0.817579663672054,
+      "writing score": 0.8026420459498078
+    },
+    "train_test_feature_row_overlap": 89,
+    "train_validation_feature_row_overlap": 90
+  },
+  "compatibility": [
+    "shared columns: none",
+    "feature sets are disjoint (study behaviour/demographics); targets are on different scales (single bounded total_score vs three exam scores)",
+    "no row-level key links the two datasets, and concatenating them would create rows with 5-6 missing features",
+    "DECISION: datasets are incompatible for a single joint model -> trained as two separate models, with the 1M-record dataset as primary"
+  ],
+  "inspection_seconds": 8.86
+}

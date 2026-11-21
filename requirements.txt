@@ -1,4 +1,10 @@
-# ---- Air Quality SLM pipeline ----
+# ---- Student Performance tabular pipeline (src/train_model.py) ----
+# Python 3.13, CPU only. Gradient-boosted trees / random forest / ridge / MLP.
+scikit-learn>=1.4.0   # HistGradientBoosting, RandomForest, Ridge, MLP, metrics, permutation importance
+joblib>=1.3.0         # model + preprocessor serialisation (.joblib)
+matplotlib>=3.7.0     # evaluation plots in results/visualizations/
+
+# ---- Student Performance SLM pipeline (src/train_slm.py) ----
 # Tested with Python 3.13, PyTorch 2.15 (CPU). CPU-only PyTorch is sufficient.
 torch>=2.1.0          # decoder-only Transformer implementation and training loop
 numpy>=1.24.0         # numeric helpers, seed control

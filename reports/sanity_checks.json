@@ -2,7 +2,7 @@
   "checks": {
     "dataset_non_empty": {
       "ok": true,
-      "detail": "119463 training blocks"
+      "detail": "167704 training blocks"
     },
     "tokenizer_roundtrip": {
       "ok": true,
@@ -10,15 +10,15 @@
     },
     "tensor_shapes": {
       "ok": true,
-      "detail": "x=(127,) y=(127,) shift_ok=True"
+      "detail": "x=(191,) y=(191,) shift_ok=True"
     },
     "forward_pass": {
       "ok": "tensor(True)",
-      "detail": "logits=(1, 127, 4096) loss=8.2337"
+      "detail": "logits=(1, 191, 4096) loss=8.2677"
     },
     "causal_mask": {
       "ok": true,
-      "detail": "prefix logits unchanged when future tokens are appended (max abs difference 0.00e+00, dropout disabled)"
+      "detail": "prefix logits unchanged when future tokens are appended (max abs difference 7.15e-07, dropout disabled)"
     },
     "backpropagation": {
       "ok": true,
@@ -30,33 +30,33 @@
     },
     "loss_decreases": {
       "ok": true,
-      "detail": "25 overfit steps on one batch: 7.4989 -> 2.8218",
+      "detail": "25 overfit steps on one batch: 7.5405 -> 3.0559",
       "curve": [
-        7.4989,
-        7.0502,
-        6.0136,
-        5.1138,
-        4.4053,
-        3.8633,
-        3.5001,
-        3.291,
-        3.177,
-        3.0964,
-        3.0607,
-        3.0082,
-        2.9638,
-        2.9475,
-        2.9298,
-        2.9357,
-        2.9297,
-        2.879,
-        2.8787,
-        2.889,
-        2.8867,
-        2.868,
-        2.846,
-        2.8478,
-        2.8218
+        7.5405,
+        7.2043,
+        6.1226,
+        5.0702,
+        4.4108,
+        3.8838,
+        3.5032,
+        3.2807,
+        3.1674,
+        3.122,
+        3.0987,
+        3.0923,
+        3.0903,
+        3.0926,
+        3.0932,
+        3.0845,
+        3.0735,
+        3.0677,
+        3.0633,
+        3.0632,
+        3.0631,
+        3.0691,
+        3.0605,
+        3.0627,
+        3.0559
       ]
     },
     "checkpoint_roundtrip": {
@@ -66,30 +66,30 @@
   },
   "passed": true,
   "loss_curve_25_steps": [
-    7.4989,
-    7.0502,
-    6.0136,
-    5.1138,
-    4.4053,
-    3.8633,
-    3.5001,
-    3.291,
-    3.177,
-    3.0964,
-    3.0607,
-    3.0082,
-    2.9638,
-    2.9475,
-    2.9298,
-    2.9357,
-    2.9297,
-    2.879,
-    2.8787,
-    2.889,
-    2.8867,
-    2.868,
-    2.846,
-    2.8478,
-    2.8218
+    7.5405,
+    7.2043,
+    6.1226,
+    5.0702,
+    4.4108,
+    3.8838,
+    3.5032,
+    3.2807,
+    3.1674,
+    3.122,
+    3.0987,
+    3.0923,
+    3.0903,
+    3.0926,
+    3.0932,
+    3.0845,
+    3.0735,
+    3.0677,
+    3.0633,
+    3.0632,
+    3.0631,
+    3.0691,
+    3.0605,
+    3.0627,
+    3.0559
   ]
 }

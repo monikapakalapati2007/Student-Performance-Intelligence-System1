@@ -1,286 +1,406 @@
-# Student Performance SLM — trained model, full pipeline, Ollama demo
+# Student Performance Prediction — automated training pipeline
 
-A compact decoder-only causal Transformer (RMSNorm + RoPE + SwiGLU, weight-tied head)
-**trained from scratch** on student-performance records — plus the complete reproducible
-pipeline that trains, evaluates, exports and serves it.
+An end-to-end, reproducible pipeline that loads the two Kaggle student-performance
+datasets, inspects them, preprocesses them, compares candidate models, trains the best
+one, evaluates it on an untouched test split, saves every artifact needed to reproduce
+predictions, and answers natural-language questions from the trained model and the data.
 
-Everything is real and measured on this machine: no pretrained weights, no downloaded
-tokenizer, no public text corpus, no fabricated metrics.
+```bash
+python src/train_model.py          # inspect -> preprocess -> sanity check -> train -> test -> save
+python src/predict.py --study-hours 15 --attendance 85 --participation 6.5
+python src/nl_demo.py --question "What factors influence student performance?"
+
+run_app.bat                        # web application -> http://127.0.0.1:8000
+python src/ollama_setup.py --status   # local language-layer status (optional)
+```
+
+Everything in `results/` and `training_summary.md` was produced by an actual run on this
+machine (Intel i5-12450H, 12 threads, 16 GB RAM, CPU only, Python 3.13, scikit-learn 1.9.1).
+No metric in this repository is estimated or hand-typed.
 
 ---
 
-## ⚠️ Read this first: the data is student performance, not air quality
+## 1. Introduction
 
-The project this pipeline was originally specified for was an **Air Quality SLM**, and the
-brief explicitly said *never use Student Performance datasets*. The data actually supplied
-is the opposite, so the pipeline now supports both domains via a **dataset profile** and was
-trained on the data that exists:
+The project predicts a student's overall academic score from study behaviour. It also
+classifies the letter grade. Both models are trained on the 1M-record dataset; a second,
+separate model is trained on the 1,000-record exams dataset for mathematics scores.
 
-| dataset | rows available | used | profile |
+The primary models are **gradient-boosted decision trees** (`HistGradientBoosting`),
+chosen after comparing them against ridge regression, a random forest, a multilayer
+perceptron and a tabular neural alternative on the same validation split. They are
+**not** language models. `src/nl_demo.py` is a transparent template/retrieval interface
+that reads facts from the datasets and calls the trained models for predictions; it is
+not a trained language model and does not claim to be one.
+
+## 2. Dataset sources
+
+| Dataset | Kaggle | Local files | Rows |
 |---|---|---|---|
-| `student_performance 1 million` (Kaggle: `kayhanh`) — `hugging face/million_*.parquet` | 1,000,000 | **train 20,000 / val 2,000 / test 2,000** | `student_performance` |
-| `Students Performance in Exams` (Kaggle: `spscientist`) — `hugging face/exams_*.parquet` | 1,000 | not used (smaller table family) | `student_performance` |
+| Student Performance – 1 Million Records | `kayhanh/student-performance-1-million` | `hugging face/million_*.parquet` | 1,000,000 |
+| Students Performance in Exams | `spscientist/students-performance-in-exams` | `hugging face/exams_*.parquet` | 1,000 |
 
-The two families have different schemas, so the loader keeps the largest consistent family
-and reports the choice. The word **Student Performance** appears in every report, the paper
-title, the model card and the demo — nothing claims to be an air quality model.
+The originals are read in place and never modified. `data/raw/README.md` and
+`data/raw/dataset_manifest.json` record their paths and schemas.
 
-The air-quality path is still present and fully working (`--profile air_quality`); it simply
-has no data to train on. Add an air quality table and it runs unchanged.
+## 3. Dataset description
 
----
+**Dataset 1 (primary)** — 6 columns, no missing values, 0 exact duplicate rows:
 
-## Results at a glance (measured, not estimated)
+| column | type | notes |
+|---|---|---|
+| `student_id` | int | identifier, excluded from the features |
+| `weekly_self_study_hours` | float | 0–40 |
+| `attendance_percentage` | float | 50–100 |
+| `class_participation` | float | 0–10 |
+| `total_score` | float | 9.4–100, **right-censored**: 26.8 % of rows sit at exactly 100 |
+| `grade` | string | A/B/C/D/F |
 
-**Model** — 2,557,632 parameters, 4 layers, 4 heads, d_model 192, context 128,
-vocabulary 4096 (byte-level BPE learned from the corpus), dropout 0.1.
+Target behaviour measured in `reports/data_inspection.md`:
 
-**Training** — CPU only (no CUDA, no Apple MPS), `cpu_tiny` preset, batch 16, 900 steps
-(one partial epoch of 119,463 blocks), AdamW + warm-up/cosine, 23 minutes wall clock.
+- `grade` agrees with the documented cut-offs (A ≥ 85, B ≥ 70, C ≥ 55, D ≥ 40) for
+  **99.79 %** of rows; the 2,095 exceptions are exact boundary scores assigned either way.
+  Grade is therefore a near-deterministic binning of the score and is **never** an input
+  to a model.
+- Correlations with `total_score`: study hours **+0.812**, attendance −0.001,
+  class participation −0.000. Only study hours carry linear signal.
 
-**Test split** (2,000 held-out students, 1,517,269 tokens scored, never seen in training):
+**Dataset 2 (secondary)** — 8 columns: 5 categorical features (gender, race/ethnicity,
+parental education, lunch, test-prep course) and 3 scores (math/reading/writing). No
+missing values; 0 duplicate rows.
+
+### Compatibility assessment
+
+The two datasets share **no columns**, have no row key, use different targets (one bounded
+total score vs three exam scores) and different feature types. Concatenating them would
+produce rows that are 5–6/8 missing. **They are incompatible for a joint model**, so the
+pipeline trains the 1M-record dataset as the primary model and the exams dataset as a
+separate secondary model.
+
+## 4. Data preprocessing (`src/preprocess.py`)
+
+- **Splits** are the supplied `train_/validation/test` files (700k/150k/150k and
+  700/150/150). Disjointness is verified: 0 shared `student_id` values between splits.
+  Identical feature rows in the exams table are expected on its 600-cell categorical grid
+  and carry no target information, so no re-split is done.
+- **Missing values:** none exist; the loader would drop rows with missing features/target
+  and reports the count rather than imputing silently.
+- **Duplicates:** removed within each split (0 exact duplicates found).
+- **Types:** numeric coercion for the primary table; categorical strings stripped.
+- **Outliers:** counted with a 3×IQR rule and **reported, not removed** (0 outside the
+  fences). Values are clipped only to their physical bounds (hours 0–40, attendance 0–100,
+  participation 0–10, score 0–100).
+- **Feature engineering** (row-local, no cross-row statistics): `effort_index =
+  hours × participation/10`, `study_attendance_product = hours × attendance/100`,
+  `participation_per_study_hour = participation/(hours+1)`.
+- **Encoding/scaling:** `StandardScaler` for the ridge and MLP candidates, raw features for
+  trees. The exams model uses `OneHotEncoder(handle_unknown="ignore")`. All fitted objects
+  are saved, and are fitted **on the training split only**.
+- **Leakage guards:** `student_id` is excluded (ID, r ≈ 0 with the target);
+  `total_score` is excluded from the grade classifier; the scaler/encoder never see
+  validation or test rows.
+
+## 5. Model architecture and justification
+
+Structured, low-dimensional tabular data with 1M rows and 6 features is the classic case
+where **gradient-boosted trees** outperform both deep networks and small transformers:
+no sequence structure exists, the signal is monotone and low-order, and the dataset is far
+too small in feature count to justify attention. Candidate comparison on the validation
+split (all trained on this machine):
+
+| model | train rows | val MAE | val RMSE | val R² | fit time |
+|---|---|---|---|---|---|
+| Ridge (linear baseline) | 700,000 | 7.044 | 8.868 | 0.6701 | 0.04 s |
+| Random forest (300k subsample) | 300,000 | 6.148 | 8.278 | 0.7125 | 19.2 s |
+| MLP 64-32 (200k subsample) | 200,000 | 6.132 | 8.234 | 0.7156 | 8.8 s |
+| **HistGradientBoosting (selected)** | **700,000** | **6.116** | **8.221** | **0.7165** | **2.0 s** |
+
+`HistGradientBoostingRegressor` wins on accuracy *and* is ~10× cheaper than the forest;
+it handles 700k rows directly, needs no GPU and produces a 0.41 MB model.
+
+A **tabular transformer / compact LM was rejected**: with 3 informative behaviour features
+there is nothing for self-attention to model, and a language model would have to serialise
+rows to text and would predict digits far less accurately (the project's earlier SLM
+experiment measured numeric recall 0.0 — see `docs/SLM_PIPELINE_README.md`). An MLP was
+tested and placed third.
+
+## 6. Training methodology (`src/train_model.py`)
+
+1. Load config (`training_config.json`), seed everything (1337), detect hardware.
+2. Discover and validate datasets, build processed splits, fit preprocessors.
+3. **Sanity check** on 5,000 train / 2,000 validation rows — 11 assertions: data loaded,
+   features exclude the target, no missing values, preprocessor shapes, finite values,
+   prediction shape, finite metrics, checkpoint save/load round-trip, MLP trains and its
+   loss decreases, grade classifier predicts known labels. Any failure raises and stops
+   the run.
+4. Train every enabled candidate on the train split, evaluate on validation.
+5. Hyper-parameter search over 3 `HistGradientBoosting` configurations (depth, learning
+   rate, L2), selected on validation MAE.
+6. Select the best model on **validation RMSE**; save a checkpoint per candidate.
+7. **Refit** the chosen configuration on train+validation (850,000 rows), then evaluate
+   once on the untouched test split.
+8. Train the grade classifier (behaviour features only) on train, select on validation
+   weighted-F1, refit on train+validation, evaluate on test.
+9. Train the secondary exams model; permutation importance on the test split; sample
+   predictions; write metrics, predictions, plots and `training_summary.md`.
+
+Reproducibility: single seed, deterministic tree settings, resumable checkpoints of every
+candidate, and `training_config.json` capturing all hyper-parameters.
+
+## 7. Evaluation metrics and results
+
+**Regression — final model refit on 850,000 rows (train+validation), scored on 150,000 unseen test records:**
 
 | metric | value |
 |---|---|
-| cross-entropy loss | **0.1786** |
-| perplexity | **1.196** |
-| teacher-forced token accuracy | **94.44 %** |
-| QA mean token F1 (12 held-out questions) | 0.8667 |
-| QA exact match | 0.1667 |
-| QA numeric recall | **0.0** |
-| numerals generated that the reference does not contain | 6 |
+| MAE | **6.119 points** |
+| MSE | 67.346 |
+| RMSE | **8.206 points** |
+| R² | **0.7175** |
+| target mean ± SD | 84.29 ± 15.44 |
+| predictions outside 0–100 | 0 |
 
-The last two rows are the honest headline. The model reproduces the *shape* of an answer
-almost perfectly — template, field names, units — but assigns the wrong digits. It has
-learned the corpus distribution, not record retrieval. That gap is reported everywhere
-rather than hidden behind token accuracy.
+Validation (150k rows, before the refit): MAE 6.118, RMSE 8.221, R² 0.7165 — the test
+result is consistent, with no sign of overfitting.
 
----
+**Classification — grade from study behaviour only (no score input):**
 
-## Quick start
+| metric | value |
+|---|---|
+| accuracy | **0.6956** |
+| weighted F1 | 0.6869 |
+| macro F1 | 0.4536 |
+| macro precision / recall | 0.5059 / 0.4405 |
+| ROC-AUC (OVR macro) | **0.9034** |
+
+Confusion matrix (rows = actual F, D, C, B, A; columns = predicted):
+
+| actual \ predicted | F | D | C | B | A |
+|---|---|---|---|---|---|
+| F | 7 | 611 | 303 | 9 | 0 |
+| D | 19 | 2,381 | 3,629 | 702 | 19 |
+| C | 11 | 1,632 | 9,585 | 8,778 | 1,291 |
+| B | 0 | 154 | 4,997 | 19,734 | 13,841 |
+| A | 0 | 38 | 513 | 9,113 | 72,633 |
+
+Rare grades collapse into their neighbours — expected, because the behaviour features
+barely separate F/D/C (see the R² ceiling discussion below).
+
+**Secondary exams model (math score, 700 training rows):** MAE 10.96, RMSE 13.18, R² 0.1104
+on 150 test rows; coarse category accuracy 50 %. A linear baseline beat the booster on
+validation and was selected. This model is a reference only.
+
+**Feature importance (permutation on the test split):** study hours 11.74 RMSE points;
+`participation_per_study_hour` 0.007; `study_attendance_product` 0.006; `effort_index`
+0.004; class participation 0.0002; attendance −0.0003.
+
+Plots in `results/visualizations/`: actual vs predicted, residuals, feature importance,
+model comparison, confusion matrix, training/validation curves, exams model.
+
+## 8. Install dependencies
 
 ```bash
 python -m venv .venv
-.venv\Scripts\activate                 # Windows;  source .venv/bin/activate elsewhere
+.venv\Scripts\activate            # Windows;  source .venv/bin/activate elsewhere
 pip install -r requirements.txt
-
-python src/train_slm.py                # train + evaluate + reports
-python src/make_paper.py               # IEEE-format article
-python src/export_ollama.py --verify   # GGUF + Modelfile
-python src/chat_demo.py                # browser chat at http://127.0.0.1:8080
 ```
 
-> **This machine:** the `python` on `PATH` is Python **2.7** (MGLTools) and cannot run this
-> project. Use `.venv\Scripts\python.exe` or activate the venv first.
+Or just the pipeline's needs: `pip install scikit-learn joblib matplotlib pandas pyarrow`.
+This machine's `python` on `PATH` is Python 2.7 (MGLTools); use `.venv\Scripts\python.exe`.
+
+## 9. Start training
+
+```bash
+python src/train_model.py             # full run, ~1.5 minutes on this CPU
+python src/train_model.py --quick     # 20 s smoke run on subsamples
+python src/train_model.py --skip-sanity
+python src/train_model.py --reports-only
+python src/inspect_data.py            # inspection report only
+python src/preprocess.py              # rebuild processed splits only
+```
+
+Measured wall clock for the full pipeline: **1 m 21 s** (700k rows, 4 candidates, 3 search
+trials, 2 grade candidates, exams model, plots).
+
+## 10. Run predictions
+
+```bash
+# one student
+python src/predict.py --study-hours 15 --attendance 85 --participation 6.5
+
+# JSON / CSV batch
+python src/predict.py --json '{"study_hours": 18, "attendance": 92, "participation": 8}'
+python src/predict.py --input my_students.csv --out results/my_predictions.csv
+
+# rows from the test split, with actual values for comparison
+python src/predict.py --sample 5
+
+# secondary exams model
+python src/predict.py --exams-json '{"gender": "female", "race/ethnicity": "group C",
+  "parental level of education": "some college", "lunch": "standard",
+  "test preparation course": "completed"}'
+```
+
+Natural-language demo (template/retrieval layer, **not** a language model):
+
+```bash
+python src/nl_demo.py --question "What factors influence student performance?"
+python src/nl_demo.py --question "How does test preparation relate to exam performance?"
+python src/nl_demo.py --question "Predict the score for a student studying 18 hours with 92% attendance and participation 8"
+python src/nl_demo.py --interactive
+```
+
+Every answer is tagged `OBSERVATION` (computed from the dataset), `PREDICTION` (model
+estimate), or `MODEL INTERPRETATION` (measured on the model).
+
+## 11. Where the artifacts live
+
+```
+data/
+  raw/            manifest + README (originals stay in hugging face/)
+  processed/tabular/   million_{train,validation,test}.parquet, exams_*.parquet
+  splits/         per-split id/row manifests
+models/student_performance/
+  best_model/     model.joblib, grade_model.joblib, exams_model.joblib
+  final_model/    model.joblib (refit on train+validation)
+  checkpoints/    ridge, random_forest, hist_gradient_boosting, mlp, final_refit, grade_*
+  preprocessor/   million_preprocessor.joblib, exams_preprocessor.joblib,
+                  preprocessor_meta.json, feature_names.json
+  model_config.json
+results/
+  metrics.json        all measured metrics, candidates, search, importance, samples
+  predictions.csv     150,000 test rows with actual/predicted/residual/predicted grade
+  run_results.json    full run record used to generate training_summary.md
+  data_inspection.json, preprocessing_summary.json, evaluation_rerun.json
+  visualizations/*.png
+training_config.json
+training_summary.md
+notebooks/student_performance_training.ipynb
+```
+
+Model serialisation: `joblib` (scikit-learn's portable format). Each artifact stores the
+fitted model, feature order, target, scaling flag, grade labels and its metrics, so
+`src/predict.py` reproduces the training-time predictions exactly.
+
+## 12. Limitations and future improvements
+
+- **Target ceiling.** 26.8 % of scores are exactly 100, so the regression is right-censored
+  and R² saturates near 0.72. A censored/Tobit model or a two-stage "will hit 100?" model
+  would model this properly.
+- **Weak covariates.** Attendance and class participation have essentially zero signal in
+  this dataset (|r| < 0.001). R² ≈ 0.72 is close to the information limit of the three
+  features, not a tuning failure. Real improvement needs better features.
+- **Grade is derived from the score.** 99.79 % of grades follow the cut-offs, so grade
+  classification from behaviour alone is intrinsically harder and confuses neighbouring
+  letters. Do not use it for high-stakes decisions.
+- **Synthetic-looking data.** The 1M table's smooth distributions and the deterministic
+  grade rule suggest a generated dataset; conclusions may not transfer to real students.
+- **Small secondary dataset.** 1,000 exam records support only a coarse reference model
+  (R² 0.11) and are trained separately by necessity.
+- **No causal claims.** The test-prep comparison is a descriptive group difference, not an
+  effect estimate.
+- Future work: quantile/censored regression, calibration of grade probabilities, SHAP
+  attributions, cross-validation on the exams table, and a proper calibrated deployment API.
 
 ---
 
-## Full lifecycle: data → model → Ollama chat demo
+## 13. Interactive application
 
-### Step 1 — Data collection and validation
-
-Place tables in `data/processed/`, `data/training/`, or anywhere the loader searches.
-Originals are opened **read-only**.
-
-The loader walks the directories, reads every parquet/csv/tsv/json/jsonl/xlsx/feather file,
-detects which profile each table belongs to, keeps the largest single-schema family, and
-audits shape, dtypes, missing values, duplicates, distributions, 3×IQR outliers and
-**cross-split record overlap**. Result: `reports/dataset_analysis.md`.
-
-### Step 2 — Preprocessing and text serialisation
-
-Cleaning is stateless and per-value; no statistic is fitted on one split and applied to
-another. Exact duplicates are removed within a split only. Missing values are **omitted,
-not imputed**. Outliers are **reported, not removed**. Each row becomes a record card plus
-deterministic Q/A pairs quoting that row's own values:
-
-```text
-### Student record: for student 450579. Grade: A. Measurements: Weekly self study hours
-18.6 hours per week; Attendance percentage 85 %; Class participation 7.1 points out of 10;
-Total score 100 points out of 100. ### End
-```
-
-Frozen corpus: `data/processed/student_performance/{train,validation,test}.jsonl`.
-
-### Step 3 — Tokenizer
-
-Byte-level BPE learned from the training split only (`--vocab-size`, default 4096). Byte-level
-means no out-of-vocabulary input. Saved to `models/student_performance_slm/tokenizer/`.
-
-### Step 4 — Model and sanity checks
-
-Hardware is detected and the preset, batch size, context and step budget follow from it.
-Nine checks must pass before training starts: dataset non-empty, tokenizer round-trip,
-tensor shapes and one-token shift, forward pass, finite loss, **causal mask** (prefix logits
-unchanged when future tokens are appended — evaluated with dropout disabled so it measures
-masking and not noise), finite gradients, weight update, loss decrease, exact checkpoint
-round-trip.
-
-### Step 5 — Training
+`app/server.py` (Python standard library only, no Flask/FastAPI) serves a single-page UI at
+**http://127.0.0.1:8000**:
 
 ```bash
-python src/train_slm.py                       # full run
-python src/train_slm.py --resume              # continue from checkpoints/latest_checkpoint.pt
-python src/train_slm.py --reports-only        # rewrite markdown reports from saved metadata
+run_app.bat
+# or: .venv\Scripts\python.exe app\server.py --open
 ```
 
-AdamW, warm-up + cosine, gradient clipping, validation every 50 steps, best-on-validation
-checkpoint, early stopping, resumable checkpoint, seeded row subsampling for CPU budgets.
+It contains a student input form, the predicted score and grade with an expected range, grade
+probabilities, permutation importance, model what-if estimates, a natural-language assistant,
+the measured metrics, the dataset summary, the limitations, and the secondary exams model.
 
-Outputs: `models/student_performance_slm/{best_model.pt, final_model.pt, config.json,
-training_config.json, profile.json, tokenizer/}` and `checkpoints/latest_checkpoint.pt`.
+API: `GET /api/health`, `GET /api/meta`, `POST /api/predict`, `POST /api/ask`, `POST /api/exams`.
+Invalid input returns `400` with a JSON error; the UI shows it instead of a prediction.
 
-### Step 6 — Evaluation
+## 14. Language layer (Ollama)
+
+```
+predict -> HistGradientBoosting (joblib)          numbers
+question -> Ollama llama3.2:3b (local)             wording
+```
+
+The trained model computes every number; Ollama only writes the explanation, and only from
+tool results. If Ollama is not running the assistant falls back to the deterministic engine
+and says so. See `docs/OLLAMA_INTEGRATION.md`.
 
 ```bash
-python src/evaluate.py
+# one-time setup (requires Ollama installed and running)
+python src/ollama_setup.py --all        # pull llama3.2:3b, write Modelfile, create the model
+python src/ollama_setup.py --status
+python src/ollama_service.py --ask "What factors influence student performance?"
 ```
 
-Test loss, perplexity, teacher-forced token accuracy, plus generation scoring: token F1,
-exact match, numeric recall, and unsupported-numeral count. →
-`reports/evaluation_results.json`, `reports/sample_predictions.json`.
-
-### Step 7 — Research article
-
-```bash
-python src/make_paper.py      # -> reports/research_paper.md
-```
-
-IEEE structure: abstract, index terms, eight numbered sections, eleven data tables
-(dataset shape, parameter budget, hardware, descriptive statistics with SD/percentiles/
-outliers, Pearson correlation matrix, per-epoch loss, per-checkpoint loss, test metrics,
-qualitative examples) and twelve numbered references. Generated only from run artifacts, so
-the numbers are always real. Paste into `IEEEtran` for two-column layout.
-
-### Step 8 — Export to GGUF and import into Ollama
-
-```bash
-python src/export_ollama.py --verify
-```
-
-The model is bias-free RMSNorm + RoPE + SwiGLU — llama.cpp's `llama` architecture — so the
-exporter rewrites the checkpoint into llama.cpp tensor names and writes a **GGUF v3 file by
-hand**, with the tokenizer in GPT-2 BPE form (byte→unicode table + merge list). Verified
-output: **6.50 MB, 39 tensors, `general.architecture = llama`**.
-
-```bash
-winget install Ollama.Ollama        # one time
-cd models/ollama
-ollama create student-performance-slm -f Modelfile
-ollama run student-performance-slm
-```
-
-### Step 9 — Chat demo without Ollama
-
-```bash
-python src/chat_demo.py             # http://127.0.0.1:8080
-```
-
-Browser chat UI plus an **Ollama-compatible REST API** (`/api/chat`, `/api/generate` with
-NDJSON streaming, `/api/tags`, `/api/ps`, `/health`), stdlib-only server. Same interface as
-`ollama serve`, so the demo works even if the GGUF route is blocked.
-
-### Step 10 — Publish to Hugging Face
-
-```bash
-pip install huggingface_hub && huggingface-cli login
-python src/upload_huggingface.py --dry-run
-python src/upload_huggingface.py \
-    --repo-id <username>/student-performance-slm \
-    --dataset-repo-id <username>/student-performance-processed
-```
-
-Generates model and dataset cards from measured metrics. Nothing uploads without an explicit
-`--repo-id`; no token is ever stored in the repo. Note the weights are a **custom
-architecture** — `AutoModel.from_pretrained()` will not load them; the card includes the
-loading snippet.
-
-### Step 11 — GitHub
-
-```bash
-git init && git add . && git commit -m "Student Performance SLM pipeline"
-git branch -M main
-git remote add origin https://github.com/<username>/student-performance-slm.git
-git push -u origin main
-```
-
-`.gitignore` excludes `.venv/`, weights, processed data, logs and the unrelated datasets, so
-only source and docs are committed.
-
----
-
-## Project structure
-
-```
-src/
-    train_slm.py              main entry point: the whole pipeline
-    profiles.py               dataset profiles (air_quality | student_performance)
-    preprocess_air_quality.py cleaning, serialisation, QA generation, domain text
-    dataset_loader.py         discovery, profile detection, validation, statistics
-    tokenizer.py              byte-level BPE from scratch + block creation
-    model.py                  config, hardware presets, checkpoint save/load
-    transformer.py            RMSNorm, RoPE, causal attention, SwiGLU, GPT
-    evaluate.py               test metrics + QA probes
-    inference.py              prompted generation, scoring, REPL
-    export_ollama.py          GGUF v3 writer + Modelfile generator
-    chat_demo.py              browser chat + Ollama-compatible REST API
-    upload_huggingface.py     model/dataset cards + upload
-    make_paper.py             IEEE-format article generator
-    reporting.py              training_summary.md / dataset_analysis.md
-    utils.py                  seeding, hardware detection, logging
-docs/
-    PRESENTATION_CHECKLIST.md the five deliverables, mapped to commands
-```
-
-Generated by the run (not committed): `models/`, `checkpoints/`, `reports/`,
-`data/processed/`.
-
----
-
-## Command reference
-
-| command | purpose |
+| component | file |
 |---|---|
-| `python src/train_slm.py` | validate → preprocess → tokenize → sanity → train → evaluate → reports |
-| `--profile {auto,air_quality,student_performance}` | dataset domain (default `auto`) |
-| `--resume` / `--reports-only` | resume training / regenerate markdown only |
-| `--max-records N` `--max-eval-records N` | seeded subsample caps (`0` = all rows) |
-| `--preset {cpu_tiny,cpu_small,mps_small,gpu_small}` | model size |
-| `python src/evaluate.py` | metrics + QA probes from saved artifacts |
-| `python src/inference.py --question "..."` / `--interactive` | generation |
-| `python src/chat_demo.py` | chat UI + Ollama-compatible API |
-| `python src/export_ollama.py --verify` | GGUF + Modelfile |
-| `python src/make_paper.py` | IEEE-format article |
-| `python src/upload_huggingface.py --dry-run` | preview HF upload |
+| grounded prediction/statistics engine | `src/insight.py` |
+| Ollama client, tools, fallback, numeric audit | `src/ollama_service.py` |
+| system prompt / template / parameters | `src/ollama_prompt.py` |
+| model registration | `src/ollama_setup.py` |
+| generated Modelfile | `models/ollama/Modelfile.student-performance` |
+
+`models/ollama/student-performance-slm.f16.gguf` is the GGUF export of the earlier from-scratch
+2.56 M-parameter Transformer experiment. It was converted successfully and is preserved, but it
+is not used as the assistant: the trained prediction model stays in joblib format, and the
+language layer is a supported Llama-family model.
+
+## 15. Tests
+
+```bash
+.venv\Scripts\python.exe -m unittest discover -s tests -v
+```
+
+25 tests: artifact presence, metric consistency with `model_config.json`, single/batch prediction
+reproducibility, input validation, what-if math, grounded answers, the HTTP API including 400/403/404
+paths, Ollama tool execution, fallback and numeric audit. The LLM test skips itself when no Ollama
+model is installed.
+
+## 16. Documentation
+
+| document | contents |
+|---|---|
+| `docs/ARCHITECTURE.md` | component map, data flow, leakage guards, model identification |
+| `docs/DATASETS.md` | both datasets, quality checks, compatibility |
+| `docs/TRAINING.md` | pipeline steps, candidates, hyper-parameters, reproducibility |
+| `docs/EVALUATION.md` | measured metrics, confusion matrix, importance, cross-checks |
+| `docs/OLLAMA_INTEGRATION.md` | tool contract, grounding safeguards, setup |
+| `docs/APPLICATION.md` | UI screens, API, tests |
+| `docs/LIMITATIONS.md` | measured limits and future work |
+| `docs/SLM_PIPELINE_README.md` | the original from-scratch SLM experiment |
 
 ---
 
-## Design notes
+## Project layout
 
-**Why a custom tokenizer.** CPU-only, offline, no downloaded artefacts; byte-level BPE keeps
-the vocabulary small and never yields an unknown token.
+```
+app/
+  server.py       HTTP server + JSON API (stdlib only)
+  static/         index.html, styles.css, app.js
+tests/
+  test_system.py  end-to-end suite
+src/
+  train_model.py    single entry point for the whole pipeline
+  inspect_data.py   dataset + environment inspection report
+  preprocess.py     loading, cleaning, feature engineering, encoding, splits
+  evaluate.py       metrics, artifacts export, plots (re-runnable)
+  predict.py        inference CLI / Python API
+  insight.py        grounded predictions, statistics, what-if, deterministic answers
+  ollama_service.py Ollama tool-calling bridge (numbers come from the joblib model)
+  ollama_setup.py   pull base model / write Modelfile / register the Ollama model
+  ollama_prompt.py  canonical system prompt and parameters
+  nl_demo.py        natural-language demo over data + trained models
+  utils.py          shared helpers (seeding, hardware, metrics, dataset discovery)
+  train_slm.py ...  the earlier from-scratch SLM experiment (see docs/SLM_PIPELINE_README.md)
+notebooks/student_performance_training.ipynb
+```
 
-**Why RoPE / RMSNorm / SwiGLU.** Modern standard, and together they *are* the `llama`
-architecture — which is what makes the Ollama export possible without new kernels.
-
-**Why numeric recall is reported.** A model this small learns answer shape far more easily
-than digits. Token accuracy would hide that; numeric recall (measured: 0.0) exposes it.
-
-**Why subsampling is logged.** 1,000,000 rows cannot be trained on in a CPU demo, so a seeded
-subsample is used and recorded in `run_metadata.json` and both reports. Splits are never
-re-partitioned, so validation and test stay disjoint.
-
----
-
-## Limitations
-
-- **Numbers are unreliable.** Numeric recall on held-out QA is 0.0; the model reproduces
-  memorised values rather than reading the prompt. Do not use generated figures for decisions.
-- **No retrieval.** Record-specific questions would require the record in the prompt.
-- **Template bias.** Q/A pairs are generated deterministically, so evaluation measures
-  fidelity to a templated distribution, not to human-written questions.
-- **Demo scale.** 2.56M parameters, 900 steps, 20k records: a demonstration model, not a
-  student-analytics system.
-- **CPU only.** GPU/MPS presets exist but were not measured here.
-- **Ollama load path untested.** The GGUF parses correctly, but `ollama create` could not be
-  executed because Ollama is not installed on this machine.
+The earlier decoder-only SLM experiment is preserved and documented in
+`docs/SLM_PIPELINE_README.md`; it is independent of this tabular pipeline.

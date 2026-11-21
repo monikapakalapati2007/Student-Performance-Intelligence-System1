@@ -155,6 +155,7 @@ def run_qa_probes(
     for record in qa_records:
         question, reference = record["question"], record.get("answer", "")
         prediction = generate_answer(model, tokenizer, question, device,
+                                     context=record.get("context") or None,
                                      temperature=temperature, max_new_tokens=max_new_tokens)
         item = {"question": question, "reference": reference, "prediction": prediction,
                 "has_reference": True}
