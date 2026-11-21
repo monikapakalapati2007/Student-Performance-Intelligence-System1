@@ -37,3 +37,27 @@ __pycache__/
 !.env.example
 .cache/
 .huggingface/
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python cache
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Generated datasets - hosted separately on Hugging Face
+data/raw/
+data/processed/
+
+# Large model artifacts - hosted on Hugging Face
+*.gguf
+*.safetensors
+
+# System files
+.DS_Store
